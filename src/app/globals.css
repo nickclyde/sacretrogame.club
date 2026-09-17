@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+/* Palette borrowed from the Super Famicom: lilac-gray shell, deep purple ink,
+   and the four face-button colors. */
+:root {
+  --shell: #d9d6de;
+  --panel: #f3f1f6;
+  --ink: #2a2340;
+  --muted: #625a7c;
+  --purple: #4f3fa0;
+  --red: #c92a3a;
+  --yellow: #f2b90f;
+  --green: #17824a;
+  --blue: #2560c4;
+}
+
+@theme inline {
+  --color-shell: var(--shell);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-purple: var(--purple);
+  --color-red: var(--red);
+  --color-yellow: var(--yellow);
+  --color-green: var(--green);
+  --color-blue: var(--blue);
+  --font-sans: var(--font-body);
+  --font-pixel: var(--font-pixel);
+}
+
+body {
+  background: var(--shell);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Hard offset shadow, no blur: reads as a sprite drop shadow. */
+.pixel-box {
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.pixel-btn {
+  font-family: var(--font-pixel);
+  border: 3px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+}
+.pixel-btn:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+.pixel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .blink {
+    animation: blink 1.1s steps(2, start) infinite;
+  }
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.maplibregl-popup-content {
+  border: 3px solid var(--ink);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 var(--ink);
+  font-family: var(--font-body);
+  color: var(--ink);
+  padding: 12px 14px;
+}
