@@ -1,5 +1,7 @@
+import { after } from "next/server";
 import { ballotSchema } from "@/lib/ballot";
-import { getBallotByName, upsertBallot } from "@/lib/db";
+import { getBallotByName, getBallots, upsertBallot } from "@/lib/db";
+import { announceBallot } from "@/lib/discord";
 import { votingIsClosed } from "@/data/polls";
 
 export async function GET(request: Request) {
@@ -17,6 +19,8 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ error: parsed.error.issues[0]?.message ?? "Invalid ballot" }, { status: 400 });
   }
+  const previous = await getBallots();
   await upsertBallot(parsed.data);
+  after(() => announceBallot(previous, parsed.data));
   return Response.json({ ok: true });
 }

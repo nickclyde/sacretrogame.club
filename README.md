@@ -21,6 +21,7 @@ setup. Without `GOOGLE_MAPS_API_KEY`, drive time lookups are disabled.
 | --- | --- |
 | `DATABASE_URL` | Neon Postgres connection string (set by the Vercel Neon integration) |
 | `GOOGLE_MAPS_API_KEY` | Server-side key for the Geocoding and Routes APIs |
+| `DISCORD_WEBHOOK_URL` | Optional. Channel webhook that gets a results summary whenever a ballot is saved |
 | `VOTING_CLOSES_AT` | Optional ISO timestamp. After it, ballots are read only |
 
 Poll options live in `src/data/polls.ts` and branches in `src/data/libraries.ts`.

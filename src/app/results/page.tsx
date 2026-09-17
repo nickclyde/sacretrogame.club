@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { RoundsChart } from "@/components/RoundsChart";
-import { BRANCH_FINDER_URL, LIBRARIES, LIBRARY_IDS } from "@/data/libraries";
-import { DAYS, SLOTS, SLOT_IDS, WEEKS, WEEK_IDS, slotDay, votingIsClosed } from "@/data/polls";
+import { BRANCH_FINDER_URL, LIBRARIES } from "@/data/libraries";
+import { slotDay, votingIsClosed } from "@/data/polls";
 import { getBallots } from "@/lib/db";
-import { tally } from "@/lib/irv";
+import { LABELS, computeResults, headline } from "@/lib/results";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Results | Sac Retro Game Club" };
@@ -18,19 +18,10 @@ function median(xs: number[]) {
 
 export default async function Results() {
   const ballots = await getBallots();
-  const slot = tally(SLOT_IDS, ballots.map((b) => b.slots));
-  const week = tally(WEEK_IDS, ballots.map((b) => b.weeks));
-  const library = tally(LIBRARY_IDS, ballots.map((b) => b.libraries));
-  const day = tally(DAYS.map((d) => d.id), ballots.map((b) => b.slots.map(slotDay)));
-
-  const slotLabels = Object.fromEntries(SLOTS.map((s) => [s.id, `${s.label}, ${s.detail}`]));
-  const weekLabels = Object.fromEntries(WEEKS.map((w) => [w.id, `${w.label} week`]));
-  const libraryLabels = Object.fromEntries(LIBRARIES.map((l) => [l.id, l.name]));
-  const dayLabels = Object.fromEntries(DAYS.map((d) => [d.id, d.label]));
-
-  const winSlot = SLOTS.find((s) => s.id === slot.winner);
-  const winWeek = WEEKS.find((w) => w.id === week.winner);
-  const winLibrary = LIBRARIES.find((l) => l.id === library.winner);
+  const results = computeResults(ballots);
+  const { slot, week, library, day } = results;
+  const { slot: slotLabels, week: weekLabels, library: libraryLabels, day: dayLabels } = LABELS;
+  const { when, where } = headline(results);
   const closed = votingIsClosed();
 
   const sharers = ballots.filter((b) => b.driveMinutes);
@@ -55,8 +46,8 @@ export default async function Results() {
       <section>
         <p className="text-muted">{closed ? "Final result" : "If voting ended now"}</p>
         <h1 className="mt-1 font-pixel text-4xl leading-tight sm:text-5xl">
-          {winWeek && winSlot ? `${winWeek.label} ${winSlot.label}, ${winSlot.detail}` : winSlot ? `${winSlot.label}, ${winSlot.detail}` : "Day and time undecided"}
-          {winLibrary && <span className="block text-purple">at {winLibrary.name}</span>}
+          {when ?? "Day and time undecided"}
+          {where && <span className="block text-purple">at {where}</span>}
         </h1>
         <p className="mt-3">
           {ballots.length} ballot{ballots.length === 1 ? "" : "s"} so far.{" "}
