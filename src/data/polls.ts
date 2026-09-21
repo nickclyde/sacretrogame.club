@@ -33,9 +33,13 @@ export function slotDay(slotId: string) {
   return slotId.split("-")[0];
 }
 
-/** Optional ISO timestamp. After it passes, ballots are read only. */
+// Voting ended once the club settled on a schedule (see src/data/meeting.ts).
+// Set to null, or to a future time, to reopen the poll.
+const CLOSES_AT: string | null = "2026-09-21T00:00:00-07:00";
+
+/** When ballots become read only. The VOTING_CLOSES_AT env var (ISO timestamp) overrides the default. */
 export function votingClosesAt(): Date | null {
-  const raw = process.env.VOTING_CLOSES_AT;
+  const raw = process.env.VOTING_CLOSES_AT || CLOSES_AT;
   if (!raw) return null;
   const d = new Date(raw);
   return Number.isNaN(d.getTime()) ? null : d;

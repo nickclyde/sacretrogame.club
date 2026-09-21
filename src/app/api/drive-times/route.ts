@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { votingIsClosed } from "@/data/polls";
 import { driveTimes, geocode } from "@/lib/google";
 
 const body = z.object({ address: z.string().trim().min(5).max(200) });
@@ -18,6 +19,9 @@ function allowed(ip: string) {
 }
 
 export async function POST(request: Request) {
+  // Lookups only exist to help fill in a ballot.
+  if (votingIsClosed()) return Response.json({ error: "Voting has closed." }, { status: 403 });
+
   const key = process.env.GOOGLE_MAPS_API_KEY;
   if (!key) return Response.json({ error: "Drive times are not set up yet." }, { status: 503 });
 

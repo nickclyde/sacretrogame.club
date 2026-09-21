@@ -9,8 +9,6 @@ const nextConfig: NextConfig = {
         destination: "https://sacretrogame.club/:path*",
         permanent: true,
       },
-      // Temporary until the club homepage exists at the root.
-      { source: "/", destination: "/meeting-vote", permanent: false },
     ];
   },
 };

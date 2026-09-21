@@ -18,7 +18,7 @@ const NAME_KEY = "srgc-name";
 
 type Status = { kind: "idle" } | { kind: "saving" } | { kind: "saved" } | { kind: "error"; message: string };
 
-export function Ballot({ closed }: { closed: boolean }) {
+export function Ballot() {
   const [name, setName] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
   const [weeks, setWeeks] = useState<string[]>([]);
@@ -139,7 +139,6 @@ export function Ballot({ closed }: { closed: boolean }) {
           required
           maxLength={40}
           autoComplete="nickname"
-          disabled={closed}
           value={name}
           onChange={(e) => { setName(e.target.value); dirty(); }}
           onBlur={() => loadBallot(name)}
@@ -156,7 +155,7 @@ export function Ballot({ closed }: { closed: boolean }) {
           Rank the slots you could make, best first. No Sunday or Monday options: library meeting rooms
           can&apos;t be booked those days. Rooms stay available for evening meetings after the branch closes.
         </p>
-        <RankList options={SLOTS} value={slots} onChange={(v) => { setSlots(v); dirty(); }} disabled={closed} />
+        <RankList options={SLOTS} value={slots} onChange={(v) => { setSlots(v); dirty(); }} />
       </section>
 
       <section>
@@ -164,7 +163,7 @@ export function Ballot({ closed }: { closed: boolean }) {
         <p className="mb-4 text-muted">
           We&apos;ll meet monthly on the same week, like &ldquo;the 3rd Wednesday.&rdquo; Rank the weeks that suit you.
         </p>
-        <RankList options={WEEKS} value={weeks} onChange={(v) => { setWeeks(v); dirty(); }} disabled={closed} />
+        <RankList options={WEEKS} value={weeks} onChange={(v) => { setWeeks(v); dirty(); }} />
       </section>
 
       <section>
@@ -176,7 +175,7 @@ export function Ballot({ closed }: { closed: boolean }) {
           ranking={libraries}
           home={home}
           minutes={minutes}
-          onRank={closed ? undefined : (id) => { setLibraries((cur) => (cur.includes(id) ? cur : [...cur, id])); dirty(); }}
+          onRank={(id) => { setLibraries((cur) => (cur.includes(id) ? cur : [...cur, id])); dirty(); }}
         />
 
         <div className="mt-6">
@@ -223,14 +222,12 @@ export function Ballot({ closed }: { closed: boolean }) {
         </div>
 
         <div className="mt-6">
-          <RankList options={libraryOptions} value={libraries} onChange={(v) => { setLibraries(v); dirty(); }} meta={driveMeta} disabled={closed} />
+          <RankList options={libraryOptions} value={libraries} onChange={(v) => { setLibraries(v); dirty(); }} meta={driveMeta} />
         </div>
       </section>
 
       <section className="pixel-box p-5">
-        {closed ? (
-          <p>Voting has closed. <Link href="/results" className="underline">See the results</Link>.</p>
-        ) : status.kind === "saved" ? (
+        {status.kind === "saved" ? (
           <div>
             <p className="font-pixel text-2xl text-green">Ballot saved</p>
             <p className="mt-1">

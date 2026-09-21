@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible, Pixelify_Sans } from "next/font/google";
 import Link from "next/link";
+import { votingIsClosed } from "@/data/polls";
 import "./globals.css";
 
 const body = Atkinson_Hyperlegible({ variable: "--font-body", weight: ["400", "700"], subsets: ["latin"] });
@@ -8,7 +9,7 @@ const pixel = Pixelify_Sans({ variable: "--font-pixel", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Sac Retro Game Club",
-  description: "Help pick when and where the Sac Retro Game Club meets.",
+  description: "A community for retro gaming fans in Sacramento and beyond. We meet up once a month.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Sac Retro Game Club
             </Link>
             <nav className="flex gap-5 font-pixel text-lg">
-              <Link href="/meeting-vote" className="underline-offset-4 hover:underline">Vote</Link>
+              {!votingIsClosed() && <Link href="/meeting-vote" className="underline-offset-4 hover:underline">Vote</Link>}
               <Link href="/results" className="underline-offset-4 hover:underline">Results</Link>
             </nav>
           </div>

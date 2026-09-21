@@ -1,14 +1,10 @@
 "use client";
 
-import "maplibre-gl/dist/maplibre-gl.css";
-import * as maplibregl from "maplibre-gl";
 import { useState } from "react";
 import { Map, Marker, NavigationControl, Popup } from "react-map-gl/maplibre";
 import { LIBRARIES, directionsUrl, fullAddress } from "@/data/libraries";
 import type { DriveMinutes } from "@/lib/ballot";
-
-// See scripts/copy-map-worker.mjs.
-maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
+import { MAP_STYLE, maplibregl } from "./maplibre";
 
 type Props = {
   ranking: string[];
@@ -26,7 +22,7 @@ export default function LibraryMap({ ranking, home, minutes, onRank }: Props) {
       <Map
         mapLib={maplibregl}
         initialViewState={{ bounds: [-121.56, 38.43, -121.24, 38.69], fitBoundsOptions: { padding: 40 } }}
-        mapStyle="https://tiles.openfreemap.org/styles/positron"
+        mapStyle={MAP_STYLE}
         cooperativeGestures
         attributionControl={{ compact: true }}
       >

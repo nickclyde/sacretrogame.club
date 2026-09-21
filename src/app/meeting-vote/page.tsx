@@ -1,9 +1,29 @@
+import Link from "next/link";
 import { Ballot } from "@/components/Ballot";
 import { votingClosesAt, votingIsClosed } from "@/data/polls";
 
 export const dynamic = "force-dynamic";
+export const metadata = {
+  title: "Meeting vote | Sac Retro Game Club",
+  description: "Help pick when and where the Sac Retro Game Club meets.",
+};
 
 export default function MeetingVote() {
+  if (votingIsClosed()) {
+    return (
+      <>
+        <h1 className="font-pixel text-4xl leading-tight sm:text-5xl">Voting has closed</h1>
+        <p className="mt-3 max-w-[60ch]">
+          Thanks to everyone who ranked their picks. The club has settled on a monthly meetup.
+        </p>
+        <p className="mt-6 flex flex-wrap gap-4">
+          <Link href="/results" className="pixel-btn bg-yellow text-xl">See the results</Link>
+          <Link href="/" className="pixel-btn bg-white text-xl">Next meetup</Link>
+        </p>
+      </>
+    );
+  }
+
   const closes = votingClosesAt();
   return (
     <>
@@ -19,7 +39,7 @@ export default function MeetingVote() {
           </>
         )}
       </p>
-      <Ballot closed={votingIsClosed()} />
+      <Ballot />
     </>
   );
 }

@@ -33,10 +33,12 @@ export default async function Results() {
   if (ballots.length === 0) {
     return (
       <>
-        <h1 className="font-pixel text-4xl">No ballots yet</h1>
-        <p className="mt-3">
-          Be the first: <Link href="/meeting-vote" className="font-bold underline">rank your picks</Link>.
-        </p>
+        <h1 className="font-pixel text-4xl">{closed ? "No ballots were cast" : "No ballots yet"}</h1>
+        {!closed && (
+          <p className="mt-3">
+            Be the first: <Link href="/meeting-vote" className="font-bold underline">rank your picks</Link>.
+          </p>
+        )}
       </>
     );
   }
@@ -50,7 +52,7 @@ export default async function Results() {
           {where && <span className="block text-purple">at {where}</span>}
         </h1>
         <p className="mt-3">
-          {ballots.length} ballot{ballots.length === 1 ? "" : "s"} so far.{" "}
+          {ballots.length} ballot{ballots.length === 1 ? "" : "s"} {closed ? "counted. Voting has closed." : "so far."}{" "}
           {!closed && <Link href="/meeting-vote" className="font-bold underline">Add or change yours</Link>}
         </p>
       </section>
