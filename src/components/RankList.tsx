@@ -100,13 +100,13 @@ function Row(props: {
 }) {
   const { option, place, last, meta, disabled, onMove, onRemove } = props;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: option.id });
-  const iconBtn = "grid h-9 w-9 place-items-center border-2 border-ink bg-white font-pixel text-lg disabled:opacity-30";
+  const iconBtn = "grid h-9 w-9 place-items-center border-2 border-ink bg-field font-pixel text-lg disabled:opacity-30";
 
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-center gap-2 border-[3px] border-ink bg-white px-2 py-2 ${isDragging ? "relative z-10 shadow-[6px_6px_0_var(--ink)]" : ""}`}
+      className={`flex items-center gap-2 border-[3px] border-ink bg-field px-2 py-2 ${isDragging ? "relative z-10 shadow-[6px_6px_0_var(--shadow)]" : ""}`}
     >
       <button
         type="button"

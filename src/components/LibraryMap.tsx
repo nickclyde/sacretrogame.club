@@ -25,6 +25,8 @@ export default function LibraryMap({ ranking, home, minutes, onRank }: Props) {
         mapStyle={MAP_STYLE}
         cooperativeGestures
         attributionControl={{ compact: true }}
+        // The tiles are light, so markers and popups keep light colors in dark mode.
+        style={{ colorScheme: "light" }}
       >
         <NavigationControl position="top-right" showCompass={false} />
         {LIBRARIES.map((l) => {
@@ -34,7 +36,7 @@ export default function LibraryMap({ ranking, home, minutes, onRank }: Props) {
               <button
                 type="button"
                 aria-label={l.name}
-                className={`grid h-8 min-w-8 cursor-pointer place-items-center border-[3px] border-ink px-1 font-pixel text-lg shadow-[3px_3px_0_var(--ink)] ${place >= 0 ? "bg-yellow text-ink" : "bg-purple text-white"}`}
+                className={`grid h-8 min-w-8 cursor-pointer place-items-center border-[3px] border-ink px-1 font-pixel text-lg shadow-[3px_3px_0_var(--shadow)] ${place >= 0 ? "bg-yellow text-ink" : "bg-purple text-white"}`}
               >
                 {place >= 0 ? place + 1 : "?"}
               </button>
@@ -43,7 +45,7 @@ export default function LibraryMap({ ranking, home, minutes, onRank }: Props) {
         })}
         {home && (
           <Marker longitude={home.lng} latitude={home.lat} anchor="center">
-            <span className="block border-[3px] border-ink bg-red px-1.5 font-pixel text-white shadow-[3px_3px_0_var(--ink)]">You</span>
+            <span className="block border-[3px] border-ink bg-red px-1.5 font-pixel text-white shadow-[3px_3px_0_var(--shadow)]">You</span>
           </Marker>
         )}
         {open && (

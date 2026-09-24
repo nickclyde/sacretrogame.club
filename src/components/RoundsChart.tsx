@@ -34,7 +34,7 @@ export function RoundsChart({ result, labels, color }: Props) {
                     <span className={`truncate ${out ? "text-muted line-through" : ""} ${final && id === result.winner ? "font-bold" : ""}`}>
                       {labels[id]}
                     </span>
-                    <span className="h-4 border-2 border-ink bg-white">
+                    <span className="h-4 border-2 border-ink bg-field">
                       <span className="block h-full" style={{ width: `${counted ? (votes / counted) * 100 : 0}%`, background: out ? "var(--muted)" : color }} />
                     </span>
                     <span className="text-right tabular-nums">{votes}</span>

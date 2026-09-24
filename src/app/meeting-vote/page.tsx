@@ -18,7 +18,7 @@ export default function MeetingVote() {
         </p>
         <p className="mt-6 flex flex-wrap gap-4">
           <Link href="/results" className="pixel-btn bg-yellow text-xl">See the results</Link>
-          <Link href="/" className="pixel-btn bg-white text-xl">Next meetup</Link>
+          <Link href="/" className="pixel-btn bg-field text-xl">Next meetup</Link>
         </p>
       </>
     );

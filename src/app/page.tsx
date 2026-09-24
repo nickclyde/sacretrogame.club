@@ -73,7 +73,7 @@ export default function Home() {
           <h2 className="mb-3 font-pixel text-2xl">Game of the month</h2>
           <div className="pixel-box p-5">
             {game.image && (
-              <Image {...game.image} alt="" className="mb-4 h-auto w-full max-w-[320px]" />
+              <Image {...game.image} alt="" className="logo-plate mb-4 h-auto w-full max-w-[320px]" />
             )}
             <p className="font-pixel text-3xl leading-tight">{game.title}</p>
             <p className="font-pixel text-2xl text-purple">{game.platform}</p>
