@@ -99,6 +99,13 @@ describe("announcements", () => {
     expect(await storedWinner(KEY)).toEqual({ settled: true, winner: null });
   });
 
+  it("announce voting again after a reset, such as after a dry run", async () => {
+    expect(await claimAnnouncement(KEY, "opened")).toBe(true);
+    expect(await claimAnnouncement(KEY, "opened")).toBe(false);
+    await resetVoteTimes(KEY);
+    expect(await claimAnnouncement(KEY, "opened")).toBe(true);
+  });
+
   it("remember the winning nomination, and forget it when the vote is reset", async () => {
     const ana = await user("Ana");
     const r = await addNomination(KEY, ana, game("Chrono Trigger"));
