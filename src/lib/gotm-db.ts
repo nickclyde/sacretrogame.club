@@ -19,10 +19,14 @@ export async function setVoteTimes(key: string, times: { opensAt?: Date | null; 
   if (times.closesAt !== undefined) await sql`update gotm_cycles set vote_closes_at = ${iso(times.closesAt)} where key = ${key}`;
 }
 
-/** Back to the regular schedule. Also forgets a recorded winner so a reopened vote is counted again. */
+/**
+ * Back to the regular schedule. Also forgets that voting was announced and any recorded winner,
+ * so the vote is announced and counted again when it opens for real.
+ */
 export async function resetVoteTimes(key: string) {
   await sql`
-    update gotm_cycles set vote_opens_at = null, vote_closes_at = null, winner_announced_at = null, winner_nomination_id = null
+    update gotm_cycles
+    set vote_opens_at = null, vote_closes_at = null, opened_announced_at = null, winner_announced_at = null, winner_nomination_id = null
     where key = ${key}`;
 }
 
