@@ -1,23 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import { VenueMap } from "@/components/VenueMap";
-import { GAME_PICKS } from "@/data/games";
+import { DISCORD_INVITE_URL } from "@/data/club";
 import { directionsUrl, fullAddress } from "@/data/libraries";
 import { MEETING, MEETING_LIBRARY } from "@/data/meeting";
+import { pickForMonth } from "@/lib/game-picks";
+import { monthKey, monthName } from "@/lib/gotm";
+import { currentCycle } from "@/lib/gotm-db";
 import { TZ, nextMeeting } from "@/lib/meeting";
 
 // The next meeting date depends on the current time.
 export const dynamic = "force-dynamic";
 
 const ORDINALS = ["1st", "2nd", "3rd", "4th"];
-const DISCORD_INVITE_URL = "https://discord.gg/SpMgfr3dbh";
 
-export default function Home() {
+export default async function Home() {
   const { start, end } = nextMeeting(MEETING);
   const date = start.toLocaleDateString("en-US", { timeZone: TZ, weekday: "long", month: "long", day: "numeric" });
   const weekday = start.toLocaleDateString("en-US", { timeZone: TZ, weekday: "long" });
   const hour = (d: Date) => d.toLocaleTimeString("en-US", { timeZone: TZ, hour: "numeric" });
-  const game = GAME_PICKS[start.toLocaleDateString("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit" })];
+  const game = await pickForMonth(monthKey(start));
+  const cycle = await currentCycle();
 
   return (
     <div className="flex flex-col gap-12">
@@ -68,15 +71,20 @@ export default function Home() {
         </p>
       </section>
 
-      {game && (
-        <section>
-          <h2 className="mb-3 font-pixel text-2xl">Game of the month</h2>
-          <div className="pixel-box p-5">
+      <section>
+        <h2 className="mb-3 font-pixel text-2xl">Game of the month</h2>
+        {game && (
+          <div className="pixel-box mb-6 p-5">
             {game.image && (
-              <Image {...game.image} alt="" className="logo-plate mb-4 h-auto w-full max-w-[320px]" />
+              <Image
+                {...game.image}
+                alt=""
+                className={`mb-4 h-auto w-full ${game.image.height > game.image.width ? "max-w-[200px] border-[3px] border-ink" : "logo-plate max-w-[320px]"}`}
+              />
             )}
             <p className="font-pixel text-3xl leading-tight">{game.title}</p>
             <p className="font-pixel text-2xl text-purple">{game.platform}</p>
+            {game.nominator && <p className="mt-1 text-sm text-muted">Picked by club vote, nominated by {game.nominator}</p>}
             <p className="mt-3 max-w-[60ch]">
               This is the game we&apos;ll be talking about at the next meetup. Any way of playing is
               encouraged:{" "}
@@ -102,13 +110,27 @@ export default function Home() {
             {game.aboutUrl && (
               <p className="mt-3">
                 <a className="font-bold underline" href={game.aboutUrl} target="_blank" rel="noreferrer">
-                  Read about the game on Wikipedia
+                  Read about the game on {game.aboutSite ?? "Wikipedia"}
                 </a>
               </p>
             )}
           </div>
-        </section>
-      )}
+        )}
+        <p className="max-w-[60ch]">
+          {cycle.phase === "nominating" ? (
+            <>
+              The club picks each month&apos;s game together. Nominations for {monthName(cycle.key)} are open, and
+              we vote at the meetup.{" "}
+              <Link href="/game-of-the-month" className="font-bold underline">Nominate a game</Link>
+            </>
+          ) : (
+            <>
+              Voting for {monthName(cycle.key)}&apos;s game is happening now.{" "}
+              <Link href="/game-of-the-month" className="font-bold underline">Watch the results live</Link>
+            </>
+          )}
+        </p>
+      </section>
 
       <section>
         <h2 className="mb-1 font-pixel text-2xl">More coming soon</h2>

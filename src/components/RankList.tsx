@@ -6,7 +6,11 @@ import { CSS } from "@dnd-kit/utilities";
 import { useId, type ReactNode } from "react";
 import type { Option } from "@/data/polls";
 
-const ORDINALS = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th"];
+/** 1 -> "1st", 12 -> "12th", 22 -> "22nd". */
+function ordinal(n: number) {
+  const suffix = n % 100 >= 11 && n % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th");
+  return `${n}${suffix}`;
+}
 
 type Props = {
   options: Option[];
@@ -78,7 +82,7 @@ export function RankList({ options, value, onChange, meta, disabled }: Props) {
                     {o.detail && <span className="text-muted"> {o.detail}</span>}
                   </span>
                   {meta?.(o.id)}
-                  <span className="sr-only">Add as {ORDINALS[value.length]} choice</span>
+                  <span className="sr-only">Add as {ordinal(value.length + 1)} choice</span>
                 </button>
               </li>
             ))}
@@ -116,7 +120,7 @@ function Row(props: {
         aria-label={`Drag to reorder ${option.label} ${option.detail ?? ""}`}
         className="w-14 shrink-0 cursor-grab touch-none select-none font-pixel text-2xl uppercase text-purple active:cursor-grabbing"
       >
-        {ORDINALS[place]}
+        {ordinal(place + 1)}
       </button>
       <span className="min-w-0 flex-1">
         <span className="font-bold">{option.label}</span>
