@@ -1,22 +1,36 @@
 @import "tailwindcss";
 
 /* Palette borrowed from the Super Famicom: lilac-gray shell, deep purple ink,
-   and the four face-button colors. */
+   and the four face-button colors. Each token is light-dark(light, dark), so
+   it follows the color-scheme of the element that uses it: the theme toggle
+   sets data-theme on <html>, and maps pin themselves to light. */
 :root {
-  --shell: #d9d6de;
-  --panel: #f3f1f6;
-  --ink: #2a2340;
-  --muted: #625a7c;
-  --purple: #4f3fa0;
-  --red: #c92a3a;
+  color-scheme: light dark;
+  --shell: light-dark(#d9d6de, #17131f);
+  --panel: light-dark(#f3f1f6, #221c30);
+  --field: light-dark(#ffffff, #2c2540);
+  --ink: light-dark(#2a2340, #e6e1f2);
+  --shadow: light-dark(#2a2340, #4f3fa0);
+  --muted: light-dark(#625a7c, #a59dc2);
+  --brand: #4f3fa0;
+  --purple: light-dark(#4f3fa0, #b4a8ff);
+  --red: light-dark(#c92a3a, #ff7482);
   --yellow: #f2b90f;
-  --green: #17824a;
-  --blue: #2560c4;
+  --green: light-dark(#17824a, #52d08c);
+  --blue: light-dark(#2560c4, #7ea6ff);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-shell: var(--shell);
   --color-panel: var(--panel);
+  --color-field: var(--field);
+  --color-brand: var(--brand);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-purple: var(--purple);
@@ -33,6 +47,11 @@ body {
   color: var(--ink);
 }
 
+/* Yellow is the same in both themes, so whatever sits on it keeps dark ink. */
+.bg-yellow {
+  color: #2a2340;
+}
+
 :focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 2px;
@@ -42,13 +61,13 @@ body {
 .pixel-box {
   background: var(--panel);
   border: 3px solid var(--ink);
-  box-shadow: 6px 6px 0 var(--ink);
+  box-shadow: 6px 6px 0 var(--shadow);
 }
 
 .pixel-btn {
   font-family: var(--font-pixel);
   border: 3px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--shadow);
   padding: 0.6rem 1.1rem;
   cursor: pointer;
 }
@@ -75,8 +94,29 @@ body {
 .maplibregl-popup-content {
   border: 3px solid var(--ink);
   border-radius: 0;
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--shadow);
   font-family: var(--font-body);
+  background: var(--field);
   color: var(--ink);
   padding: 12px 14px;
+}
+
+.theme-toggle .when-dark,
+:root[data-theme="dark"] .theme-toggle .when-light {
+  display: none;
+}
+:root[data-theme="dark"] .theme-toggle .when-dark {
+  display: inline;
+}
+
+/* Logotypes are often dark lettering on transparency, so give them a light plate in dark mode. */
+:root[data-theme="dark"] .logo-plate {
+  background: #f3f1f6;
+  padding: 0.5rem 0.75rem;
+}
+
+/* MapLibre's zoom buttons and attribution are white with dark icons. Invert them on maps that
+   switch to dark tiles; the hue rotation keeps link colors close to the original. */
+:root[data-theme="dark"] .themed-map .maplibregl-ctrl {
+  filter: invert(1) hue-rotate(180deg);
 }

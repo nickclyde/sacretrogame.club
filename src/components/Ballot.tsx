@@ -142,7 +142,7 @@ export function Ballot() {
           value={name}
           onChange={(e) => { setName(e.target.value); dirty(); }}
           onBlur={() => loadBallot(name)}
-          className="w-full max-w-sm border-[3px] border-ink bg-white px-3 py-2 font-pixel text-xl"
+          className="w-full max-w-sm border-[3px] border-ink bg-field px-3 py-2 font-pixel text-xl"
         />
         {existing && loadedNotice && (
           <p className="mt-2 text-sm text-green">Loaded the ballot saved for {existing}. Saving again replaces it.</p>
@@ -192,9 +192,9 @@ export function Ballot() {
               onKeyDown={(e) => { if (e.key === "Enter") findDriveTimes(e); }}
               autoComplete="street-address"
               placeholder="1234 J St, Sacramento"
-              className="min-w-0 flex-1 basis-64 border-[3px] border-ink bg-white px-3 py-2"
+              className="min-w-0 flex-1 basis-64 border-[3px] border-ink bg-field px-3 py-2"
             />
-            <button type="button" onClick={findDriveTimes} disabled={lookup.busy || address.trim().length < 5} className="pixel-btn bg-white">
+            <button type="button" onClick={findDriveTimes} disabled={lookup.busy || address.trim().length < 5} className="pixel-btn bg-field">
               {lookup.busy ? "Checking traffic" : "Get drive times"}
             </button>
           </div>
