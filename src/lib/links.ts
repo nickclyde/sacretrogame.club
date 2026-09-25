@@ -11,7 +11,7 @@ export function webUrl(input: string): string | null {
   return url.href;
 }
 
-const SITE_NAMES: Record<string, string> = { "igdb.com": "IGDB", "wikipedia.org": "Wikipedia" };
+const SITE_NAMES: Record<string, string> = { "wikipedia.org": "Wikipedia" };
 
 /** A short name for the site a link points to, like "Wikipedia" or "mobygames.com". */
 export function siteName(href: string): string {
