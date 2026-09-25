@@ -1,7 +1,7 @@
 export type GamePick = {
   title: string;
   platform: string;
-  /** Title logo or screenshot under public/ (or box art from IGDB), with its pixel size. */
+  /** Title logo or screenshot under public/ (or box art from Wikipedia), with its pixel size. */
   image?: { src: string; width: number; height: number };
   /** Somewhere to read about the game, such as its Wikipedia article. */
   aboutUrl?: string;

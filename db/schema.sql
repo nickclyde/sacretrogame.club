@@ -58,7 +58,8 @@ create table if not exists nominations (
   id             uuid primary key default gen_random_uuid(),
   cycle          text not null,
   user_id        uuid not null references users on delete cascade,
-  igdb_id        integer,
+  wikidata_id    text,
+  igdb_id        integer, -- From the old IGDB search. Older rows still carry it.
   title          text not null,
   platform       text not null,
   year           integer,
@@ -70,6 +71,10 @@ create table if not exists nominations (
   created_at     timestamptz not null default now(),
   removed_at     timestamptz
 );
+-- Added after the table first shipped.
+alter table nominations add column if not exists wikidata_id text;
+create unique index if not exists nominations_wikidata on nominations (cycle, wikidata_id)
+  where removed_at is null and wikidata_id is not null;
 create unique index if not exists nominations_igdb on nominations (cycle, igdb_id)
   where removed_at is null and igdb_id is not null;
 create unique index if not exists nominations_title on nominations (cycle, lower(title), platform)

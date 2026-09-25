@@ -38,7 +38,7 @@ describe("ballotMessage", () => {
 
 describe("game of the month messages", () => {
   const nom = (id: string, title: string, extra: Partial<Nomination> = {}): Nomination => ({
-    id, userId: "u", nominator: "Ana", igdbId: null, title, platform: "SNES", year: 1995, cover: null, infoUrl: null, pitch: null, ...extra,
+    id, userId: "u", nominator: "Ana", wikidataId: null, title, platform: "SNES", year: 1995, cover: null, infoUrl: null, pitch: null, ...extra,
   });
 
   it("announces a nomination with its pitch, escaped", () => {
@@ -48,9 +48,9 @@ describe("game of the month messages", () => {
     expect(msg).toContain("3 nominations so far");
   });
 
-  it("links the title to its IGDB page without an embed", () => {
-    const msg = nominationMessage("2026-11", nom("a", "Chrono Trigger", { infoUrl: "https://www.igdb.com/games/chrono-trigger" }), 1);
-    expect(msg).toContain("nominated **[Chrono Trigger](<https://www.igdb.com/games/chrono-trigger>)** (SNES, 1995)");
+  it("links the title to its info page without an embed", () => {
+    const msg = nominationMessage("2026-11", nom("a", "Chrono Trigger", { infoUrl: "https://en.wikipedia.org/wiki/Chrono_Trigger" }), 1);
+    expect(msg).toContain("nominated **[Chrono Trigger](<https://en.wikipedia.org/wiki/Chrono_Trigger>)** (SNES, 1995)");
   });
 
   it("links other sites too, encoding parentheses", () => {

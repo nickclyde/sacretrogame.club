@@ -7,9 +7,9 @@ of the branches and drive time estimates from an address. Voting is closed and
 the results stay up.
 
 `/game-of-the-month` is where members choose the next game together. Between
-meetups, signed-in members nominate up to two games each (searched from IGDB, or
-typed in by hand with an optional info link; a Wikipedia link also brings in the
-box art). Voting opens an hour before the meetup and closes 15 minutes
+meetups, signed-in members nominate up to two games each (searched from
+[Wikidata](https://www.wikidata.org) with box art from Wikipedia, or typed in by
+hand with an optional info link; a Wikipedia link also brings in the box art). Voting opens an hour before the meetup and closes 15 minutes
 before it ends, and the page shows the instant runoff count live so the room can
 watch the winner come in. People sign in with Discord (members of the club
 server), Google, or a link sent by email.
@@ -41,7 +41,6 @@ to the server log instead of emailed.
 | `DISCORD_GUILD_ID` | Only members of this Discord server can sign in with Discord |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google OAuth client. Redirect URI: `<SITE_URL>/api/auth/google/callback` |
 | `RESEND_API_KEY`, `EMAIL_FROM` | Sends sign-in links. `EMAIL_FROM` defaults to `Sac Retro Game Club <login@sacretrogame.club>` |
-| `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` | Twitch app credentials for IGDB game search |
 | `DISCORD_GOTM_WEBHOOK_URL` | Optional. Channel webhook for new nominations, voting opening, and the winner |
 | `ADMIN_DISCORD_IDS`, `ADMIN_EMAILS` | Comma separated. Hosts who can open or close the game vote early and remove nominations |
 

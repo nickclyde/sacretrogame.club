@@ -51,14 +51,18 @@ export function gotmCycle(now = new Date(), overrides: Overrides = { voteOpensAt
   return { key: addMonths(monthKey(meeting.start), 1), meeting, opensAt, closesAt, phase };
 }
 
-/** Box art with its pixel size, from IGDB or a Wikipedia article. */
+/**
+ * Box art with its pixel size, usually from a Wikipedia article. Rendered with `unoptimized`, so
+ * browsers load it straight from the host: Wikimedia throttles the generic user agent that the
+ * image optimizer sends.
+ */
 export type Cover = { src: string; width: number; height: number };
 
 export type Nomination = {
   id: string;
   userId: string;
   nominator: string;
-  igdbId: number | null;
+  wikidataId: string | null;
   title: string;
   platform: string;
   year: number | null;

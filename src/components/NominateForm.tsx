@@ -4,18 +4,17 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PITCH_MAX } from "@/data/gotm";
-import { coverUrl } from "@/lib/covers";
-import type { Game } from "@/lib/igdb";
+import type { Game } from "@/lib/wikidata";
 
-type Props = { remaining: number; searchEnabled: boolean };
+type Props = { remaining: number };
 
 type Status = { kind: "idle" } | { kind: "saving" } | { kind: "error"; message: string };
 
 const input = "w-full border-[3px] border-ink bg-field px-3 py-2";
 
-export function NominateForm({ remaining, searchEnabled }: Props) {
+export function NominateForm({ remaining }: Props) {
   const router = useRouter();
-  const [manual, setManual] = useState(!searchEnabled);
+  const [manual, setManual] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Game[]>([]);
   const [searching, setSearching] = useState(false);
@@ -72,7 +71,7 @@ export function NominateForm({ remaining, searchEnabled }: Props) {
     e.preventDefault();
     setStatus({ kind: "saving" });
     const body = game
-      ? { igdbId: game.igdbId, platform, pitch }
+      ? { wikidataId: game.wikidataId, platform, pitch }
       : { title, platform, year: year ? Number(year) : null, url, pitch };
     const res = await fetch("/api/gotm/nominations", {
       method: "POST",
@@ -102,8 +101,8 @@ export function NominateForm({ remaining, searchEnabled }: Props) {
 
       {game ? (
         <div className="flex items-start gap-3">
-          {game.coverImageId && (
-            <Image src={coverUrl(game.coverImageId, "cover_small")} alt="" width={60} height={85} className="border-2 border-ink" />
+          {game.cover && (
+            <Image src={game.cover.src} alt="" width={60} height={85} unoptimized className="h-[85px] w-[60px] shrink-0 border-2 border-ink object-cover" />
           )}
           <div className="min-w-0 flex-1">
             <p className="font-bold">{game.title}</p>
@@ -134,9 +133,7 @@ export function NominateForm({ remaining, searchEnabled }: Props) {
             />
             <span className="text-xs text-muted">Wikipedia, MobyGames, the game&apos;s own site, or anywhere with details.</span>
           </label>
-          {searchEnabled && (
-            <button type="button" onClick={() => setManual(false)} className="self-start text-sm underline">Back to search</button>
-          )}
+          <button type="button" onClick={() => setManual(false)} className="self-start text-sm underline">Back to search</button>
         </div>
       ) : (
         <div>
@@ -155,14 +152,14 @@ export function NominateForm({ remaining, searchEnabled }: Props) {
           {results.length > 0 && query.trim().length >= 2 && (
             <ul className="mt-2 flex flex-col gap-1">
               {results.map((g) => (
-                <li key={g.igdbId}>
+                <li key={g.wikidataId}>
                   <button
                     type="button"
                     onClick={() => pick(g)}
                     className="flex w-full items-center gap-3 border-[3px] border-ink/30 bg-field px-2 py-1 text-left hover:border-ink"
                   >
-                    {g.coverImageId ? (
-                      <Image src={coverUrl(g.coverImageId, "cover_small")} alt="" width={32} height={45} className="shrink-0" />
+                    {g.cover ? (
+                      <Image src={g.cover.src} alt="" width={32} height={45} unoptimized className="h-[45px] w-8 shrink-0 object-cover" />
                     ) : (
                       <span className="h-[45px] w-8 shrink-0 bg-panel" />
                     )}
@@ -180,7 +177,8 @@ export function NominateForm({ remaining, searchEnabled }: Props) {
             <button type="button" onClick={() => setManual(true)} className="underline">Can&apos;t find it? Enter it by hand</button>
           </p>
           <p className="mt-1 text-xs text-muted">
-            Game data from <a href="https://www.igdb.com" target="_blank" rel="noreferrer" className="underline">IGDB</a>.
+            Game data from <a href="https://www.wikidata.org" target="_blank" rel="noreferrer" className="underline">Wikidata</a> and{" "}
+            <a href="https://en.wikipedia.org" target="_blank" rel="noreferrer" className="underline">Wikipedia</a>.
           </p>
         </div>
       )}

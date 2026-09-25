@@ -12,7 +12,6 @@ import { pickForMonth } from "@/lib/game-picks";
 import { gotmResults, monthName, previousKey, type Cover, type Nomination } from "@/lib/gotm";
 import { syncCycle } from "@/lib/gotm-announce";
 import { currentCycle, getGameBallot, listGameBallots, listNominations } from "@/lib/gotm-db";
-import { igdbConfigured } from "@/lib/igdb";
 import { TZ } from "@/lib/meeting";
 
 export const dynamic = "force-dynamic";
@@ -57,6 +56,7 @@ export default async function GameOfTheMonth() {
                 src={winner.cover.src}
                 alt=""
                 {...heroSize(winner.cover)}
+                unoptimized
                 preload
                 className="mb-4 mt-2 border-[3px] border-ink shadow-[6px_6px_0_var(--yellow)]"
               />
@@ -139,7 +139,7 @@ export default async function GameOfTheMonth() {
               <Link href={signIn} className="pixel-btn inline-block bg-yellow text-xl">Sign in to nominate</Link>
             </p>
           ) : mine < NOMINATIONS_PER_PERSON ? (
-            <NominateForm remaining={NOMINATIONS_PER_PERSON - mine} searchEnabled={igdbConfigured()} />
+            <NominateForm remaining={NOMINATIONS_PER_PERSON - mine} />
           ) : (
             <p className="text-muted">
               You&apos;ve used both of your nominations. Withdraw one below to swap it for something else.
@@ -182,7 +182,7 @@ function NominationCard({ n, winner, canWithdraw, admin }: { n: Nomination; winn
   return (
     <li className={`flex gap-3 border-[3px] border-ink bg-field p-3 ${winner ? "shadow-[6px_6px_0_var(--yellow)]" : ""}`}>
       {n.cover ? (
-        <Image src={n.cover.src} alt="" width={64} height={91} className="h-[91px] w-16 shrink-0 border-2 border-ink object-cover" />
+        <Image src={n.cover.src} alt="" width={64} height={91} unoptimized className="h-[91px] w-16 shrink-0 border-2 border-ink object-cover" />
       ) : (
         <span aria-hidden className="grid h-[91px] w-16 shrink-0 place-items-center border-2 border-ink bg-panel font-pixel text-2xl text-muted">?</span>
       )}
