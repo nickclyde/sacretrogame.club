@@ -19,7 +19,7 @@ import {
 
 const KEY = "2026-11";
 const game = (title: string, extra: Partial<NewNomination> = {}): NewNomination => ({
-  igdbId: null, title, platform: "SNES", year: null, cover: null, infoUrl: null, pitch: null, ...extra,
+  wikidataId: null, title, platform: "SNES", year: null, cover: null, infoUrl: null, pitch: null, ...extra,
 });
 
 async function user(name: string) {
@@ -39,11 +39,11 @@ describe("nominations", () => {
     expect(await addNomination("2026-12", ana, game("Super Metroid"))).toHaveProperty("nomination");
   });
 
-  it("reject a game that is already nominated, by IGDB id or title and platform", async () => {
+  it("reject a game that is already nominated, by Wikidata id or title and platform", async () => {
     const ana = await user("Ana");
     const bo = await user("Bo");
-    await addNomination(KEY, ana, game("Chrono Trigger", { igdbId: 1802 }));
-    expect(await addNomination(KEY, bo, game("Chrono Trigger (SNES)", { igdbId: 1802 }))).toEqual({ error: "duplicate", by: "Ana" });
+    await addNomination(KEY, ana, game("Chrono Trigger", { wikidataId: "Q761815" }));
+    expect(await addNomination(KEY, bo, game("Chrono Trigger (SNES)", { wikidataId: "Q761815" }))).toEqual({ error: "duplicate", by: "Ana" });
     expect(await addNomination(KEY, bo, game("chrono trigger"))).toEqual({ error: "duplicate", by: "Ana" });
     expect(await addNomination(KEY, bo, game("Chrono Trigger", { platform: "NDS" }))).toHaveProperty("nomination");
   });

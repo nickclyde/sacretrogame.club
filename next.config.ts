@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // The in-memory dev database loads its WebAssembly build from node_modules at runtime.
   serverExternalPackages: ["@electric-sql/pglite"],
-  // Box art for nominated games, from IGDB or a Wikipedia article.
+  // Box art for nominated games, from Wikipedia (and IGDB, which older nominations used).
   images: {
     remotePatterns: [
       new URL("https://images.igdb.com/igdb/image/upload/**"),

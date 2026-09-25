@@ -34,7 +34,7 @@ type NominationRow = {
   id: string;
   user_id: string;
   display_name: string;
-  igdb_id: number | null;
+  wikidata_id: string | null;
   title: string;
   platform: string;
   year: number | null;
@@ -50,7 +50,7 @@ function fromRow(r: NominationRow): Nomination {
     id: r.id,
     userId: r.user_id,
     nominator: r.display_name,
-    igdbId: r.igdb_id,
+    wikidataId: r.wikidata_id,
     title: r.title,
     platform: r.platform,
     year: r.year,
@@ -78,7 +78,7 @@ export async function addNomination(cycle: string, userId: string, n: NewNominat
     const [dup] = await sql<{ display_name: string }>`
       select u.display_name from nominations n join users u on u.id = n.user_id
       where n.cycle = ${cycle} and n.removed_at is null
-        and (n.igdb_id = ${n.igdbId} or (lower(n.title) = lower(${n.title}) and n.platform = ${n.platform}))`;
+        and (n.wikidata_id = ${n.wikidataId} or (lower(n.title) = lower(${n.title}) and n.platform = ${n.platform}))`;
     return dup ? { error: "duplicate", by: dup.display_name } : null;
   };
   const dup = await duplicate();
@@ -87,8 +87,8 @@ export async function addNomination(cycle: string, userId: string, n: NewNominat
   let rows: { id: string }[];
   try {
     rows = await sql<{ id: string }>`
-      insert into nominations (cycle, user_id, igdb_id, title, platform, year, cover_url, cover_width, cover_height, info_url, pitch)
-      select ${cycle}, ${userId}, ${n.igdbId}, ${n.title}, ${n.platform}, ${n.year}, ${n.cover?.src ?? null}, ${n.cover?.width ?? null}, ${n.cover?.height ?? null}, ${n.infoUrl}, ${n.pitch}
+      insert into nominations (cycle, user_id, wikidata_id, title, platform, year, cover_url, cover_width, cover_height, info_url, pitch)
+      select ${cycle}, ${userId}, ${n.wikidataId}, ${n.title}, ${n.platform}, ${n.year}, ${n.cover?.src ?? null}, ${n.cover?.width ?? null}, ${n.cover?.height ?? null}, ${n.infoUrl}, ${n.pitch}
       where (select count(*) from nominations
              where cycle = ${cycle} and user_id = ${userId} and removed_at is null) < ${NOMINATIONS_PER_PERSON}
       returning id`;

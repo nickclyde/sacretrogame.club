@@ -79,6 +79,7 @@ export default async function Home() {
               <Image
                 {...game.image}
                 alt=""
+                unoptimized={game.image.src.startsWith("https:")} // A vote winner's box art, see Cover.
                 className={`mb-4 h-auto w-full ${game.image.height > game.image.width ? "max-w-[200px] border-[3px] border-ink" : "logo-plate max-w-[320px]"}`}
               />
             )}

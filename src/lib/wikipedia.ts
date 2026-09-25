@@ -1,10 +1,10 @@
 import type { Cover } from "./gotm";
 
 // Wikimedia asks API clients to identify themselves.
-const HEADERS = { "Api-User-Agent": "SacRetroGameClub/1.0 (https://sacretrogame.club)" };
+export const WIKIMEDIA_HEADERS = { "User-Agent": "SacRetroGameClub/1.0 (https://sacretrogame.club)" };
 const IMAGE_HOSTS = new Set(["upload.wikimedia.org", "thumb.wikimedia.org"]);
 
-type Image = { source: string; width: number; height: number };
+export type WikiImage = { source: string; width: number; height: number };
 
 /** The language and title of a Wikipedia article link, or null if it isn't one. */
 export function wikipediaArticle(href: string): { lang: string; title: string } | null {
@@ -25,12 +25,22 @@ export function wikipediaArticle(href: string): { lang: string; title: string } 
   return title ? { lang: host[1], title } : null;
 }
 
-function asCover(image: Image | undefined): Cover | null {
+function asCover(image: WikiImage | undefined): Cover | null {
   if (!image?.source || !image.width || !image.height) return null;
   const url = new URL(image.source);
   if (!IMAGE_HOSTS.has(url.hostname)) return null;
   url.search = ""; // Only tracking parameters.
   return { src: url.href, width: image.width, height: image.height };
+}
+
+/**
+ * An article's lead image as a Cover. Box art on Wikipedia is small, so the original is sharpest,
+ * but a free image from Commons can be huge, and an SVG won't show; the thumbnail is always a
+ * modest raster.
+ */
+export function pageCover(original: WikiImage | undefined, thumbnail: WikiImage | undefined): Cover | null {
+  const usable = original?.source && original.width <= 1000 && !/\.svg$/i.test(new URL(original.source).pathname);
+  return asCover(usable ? original : undefined) ?? asCover(thumbnail);
 }
 
 /**
@@ -42,10 +52,8 @@ export async function wikipediaCover(href: string): Promise<Cover | null> {
   const article = wikipediaArticle(href);
   if (!article) return null;
   const api = `https://${article.lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(article.title)}`;
-  const res = await fetch(api, { headers: HEADERS, signal: AbortSignal.timeout(5000) });
+  const res = await fetch(api, { headers: WIKIMEDIA_HEADERS, signal: AbortSignal.timeout(5000) });
   if (!res.ok) return null;
-  const page = (await res.json()) as { originalimage?: Image; thumbnail?: Image };
-  // The original can be an SVG, which next/image won't serve; the thumbnail is always a raster.
-  const original = page.originalimage?.source && !/\.svg$/i.test(new URL(page.originalimage.source).pathname) ? page.originalimage : undefined;
-  return asCover(original) ?? asCover(page.thumbnail);
+  const page = (await res.json()) as { originalimage?: WikiImage; thumbnail?: WikiImage };
+  return pageCover(page.originalimage, page.thumbnail);
 }

@@ -54,7 +54,7 @@ describe("month helpers", () => {
 
 describe("gotmResults", () => {
   const nom = (id: string, title: string): Nomination => ({
-    id, userId: "u", nominator: "Ana", igdbId: null, title, platform: "SNES", year: null, cover: null, infoUrl: null, pitch: null,
+    id, userId: "u", nominator: "Ana", wikidataId: null, title, platform: "SNES", year: null, cover: null, infoUrl: null, pitch: null,
   });
 
   it("ranks nominations by instant runoff with labels", () => {

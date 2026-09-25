@@ -5,9 +5,8 @@ import { sameOrigin } from "@/lib/auth/http";
 import { getUser } from "@/lib/auth/session";
 import { announceGotm, nominationMessage } from "@/lib/discord";
 import { addNomination, currentCycle, listNominations, type NewNomination } from "@/lib/gotm-db";
-import { igdbCover } from "@/lib/covers";
-import { getGame, igdbConfigured } from "@/lib/igdb";
 import { webUrl } from "@/lib/links";
+import { getGame } from "@/lib/wikidata";
 import { wikipediaCover } from "@/lib/wikipedia";
 
 const pitch = z.string().trim().max(PITCH_MAX).transform((s) => s || null).nullable().default(null);
@@ -25,7 +24,7 @@ const url = z
   .nullable()
   .default(null);
 
-const fromIgdb = z.object({ igdbId: z.number().int().positive(), platform, pitch });
+const fromSearch = z.object({ wikidataId: z.string().regex(/^Q\d+$/, "Pick a game from the search results"), platform, pitch });
 const byHand = z.object({
   title: z.string().trim().min(1, "Enter the game's title").max(120),
   platform,
@@ -46,33 +45,33 @@ export async function POST(request: Request) {
   }
   const raw = await request.json().catch(() => null);
   // Pick the schema up front: a union would report "Invalid input" instead of the field's message.
-  const parsed = (raw && typeof raw === "object" && "igdbId" in raw ? fromIgdb : byHand).safeParse(raw);
+  const parsed = (raw && typeof raw === "object" && "wikidataId" in raw ? fromSearch : byHand).safeParse(raw);
   if (!parsed.success) {
     return Response.json({ error: parsed.error.issues[0]?.message ?? "Invalid nomination" }, { status: 400 });
   }
 
   let input: NewNomination;
   const data = parsed.data;
-  if ("igdbId" in data) {
-    // Game details come from IGDB, not the browser.
-    const game = igdbConfigured() ? await getGame(data.igdbId).catch(() => null) : null;
+  if ("wikidataId" in data) {
+    // Game details come from Wikidata, not the browser.
+    const game = await getGame(data.wikidataId).catch(() => null);
     if (!game) return Response.json({ error: "Couldn't look up that game. Try again, or enter it by hand." }, { status: 502 });
     if (game.platforms.length > 0 && !game.platforms.includes(data.platform)) {
       return Response.json({ error: "Pick one of the game's platforms." }, { status: 400 });
     }
     input = {
-      igdbId: game.igdbId,
+      wikidataId: game.wikidataId,
       title: game.title,
       platform: data.platform,
       year: game.year,
-      cover: game.coverImageId ? igdbCover(game.coverImageId) : null,
+      cover: game.cover,
       infoUrl: game.url,
       pitch: data.pitch,
     };
   } else {
     // A Wikipedia link doubles as the source of box art. A failed lookup just means no art.
     const cover = data.url ? await wikipediaCover(data.url).catch(() => null) : null;
-    input = { igdbId: null, title: data.title, platform: data.platform, year: data.year, cover, infoUrl: data.url, pitch: data.pitch };
+    input = { wikidataId: null, title: data.title, platform: data.platform, year: data.year, cover, infoUrl: data.url, pitch: data.pitch };
   }
 
   const result = await addNomination(cycle.key, user.id, input);

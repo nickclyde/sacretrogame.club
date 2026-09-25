@@ -43,6 +43,14 @@ describe("wikipediaCover", () => {
     expect(await wikipediaCover("https://en.wikipedia.org/wiki/Tetris")).toMatchObject({ width: 330, height: 129 });
   });
 
+  it("uses the thumbnail when the original is very large", async () => {
+    stubSummary({
+      originalimage: { source: "https://upload.wikimedia.org/wikipedia/commons/a/ab/Cabinet.jpg", width: 3000, height: 4000 },
+      thumbnail: { source: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Cabinet.jpg/330px-Cabinet.jpg", width: 330, height: 440 },
+    });
+    expect(await wikipediaCover("https://en.wikipedia.org/wiki/Cabinet")).toMatchObject({ width: 330, height: 440 });
+  });
+
   it("skips images hosted anywhere else, and non-Wikipedia links", async () => {
     const fetch = stubSummary({ originalimage: { source: "https://example.com/a.jpg", width: 1, height: 1 } });
     expect(await wikipediaCover("https://en.wikipedia.org/wiki/X")).toBeNull();
