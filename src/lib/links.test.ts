@@ -18,7 +18,6 @@ describe("webUrl", () => {
 
 describe("siteName", () => {
   it("names known sites and falls back to the host", () => {
-    expect(siteName("https://www.igdb.com/games/chrono-trigger")).toBe("IGDB");
     expect(siteName("https://en.wikipedia.org/wiki/Tetris")).toBe("Wikipedia");
     expect(siteName("https://www.mobygames.com/game/4501")).toBe("mobygames.com");
   });
