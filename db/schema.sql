@@ -88,3 +88,27 @@ create table if not exists game_ballots (
   updated_at timestamptz not null default now(),
   primary key (cycle, user_id)
 );
+
+-- RetroAchievements account a member linked, to count their "Game Beaten" awards.
+-- The ULID is RA's stable id (usernames can change). ra_synced_at spaces out checks.
+alter table users add column if not exists ra_ulid text unique;
+alter table users add column if not exists ra_username text;
+alter table users add column if not exists ra_synced_at timestamptz;
+
+-- RetroAchievements game ids (a JSON array) whose awards count for this month's game.
+alter table gotm_cycles add column if not exists ra_game_ids jsonb;
+
+-- Who finished each month's game, on the honor system or through RetroAchievements.
+create table if not exists completions (
+  month        text not null, -- Same keys as GAME_PICKS and gotm_cycles.
+  user_id      uuid not null references users on delete cascade,
+  via          text not null, -- 'honor' or 'ra'
+  finished_at  timestamptz not null,
+  mastered_at  timestamptz,
+  hardcore     boolean not null default false,
+  -- Set once the Discord shout-out is claimed, and kept on unticking so ticking again never reposts.
+  announced_at timestamptz,
+  removed_at   timestamptz,
+  created_at   timestamptz not null default now(),
+  primary key (month, user_id)
+);

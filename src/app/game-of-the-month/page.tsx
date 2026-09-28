@@ -48,7 +48,38 @@ export default async function GameOfTheMonth() {
       {cycle.phase === "voting" && <AutoRefresh every={LIVE_REFRESH_MS} at={cycle.closesAt.toISOString()} />}
 
       <section>
-        <p className="text-muted">Game of the month</p>
+        <h1 className="font-pixel text-4xl leading-tight sm:text-5xl">Game of the month</h1>
+        <p className="mt-3 max-w-[60ch]">
+          Each month the club picks one game to play together, then we talk about it at the meetup. Any way of
+          playing is encouraged: original hardware, emulation, FPGA, or a modern port. Play however makes it the most
+          fun, and don&apos;t be afraid of guides or save states!
+        </p>
+      </section>
+
+      {cycle.phase === "nominating" && nowPlaying && (
+        <section className="pixel-box flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
+          {nowPlaying.image && (
+            <Image
+              {...nowPlaying.image}
+              alt=""
+              unoptimized={nowPlaying.image.src.startsWith("https:")} // A vote winner's box art, see Cover.
+              className={`h-auto shrink-0 ${nowPlaying.image.height > nowPlaying.image.width ? "w-20 border-2 border-ink" : "logo-plate w-40"}`}
+            />
+          )}
+          <div className="min-w-0">
+            <p className="text-muted">Playing now for the {monthName(previousKey(cycle.key))} meetup</p>
+            <p className="font-pixel text-2xl leading-tight">{nowPlaying.title}</p>
+            <p className="text-sm text-purple">{nowPlaying.platform}</p>
+            <p className="mt-4">
+              <Link href="/game-of-the-month/leaderboard" className="pixel-btn inline-block bg-yellow text-xl">
+                🏁 Leaderboard
+              </Link>
+            </p>
+          </div>
+        </section>
+      )}
+
+      <section>
         {cycle.phase === "closed" && winner ? (
           <>
             {winner.cover && (
@@ -61,16 +92,16 @@ export default async function GameOfTheMonth() {
                 className="mb-4 mt-2 border-[3px] border-ink shadow-[6px_6px_0_var(--yellow)]"
               />
             )}
-            <h1 className="mt-1 font-pixel text-4xl leading-tight sm:text-5xl">
+            <h2 className="font-pixel text-3xl leading-tight sm:text-4xl">
               {month}&apos;s game is <span className="text-purple">{winner.title}</span>
-            </h1>
+            </h2>
             <p className="mt-3">
               {winner.platform}, nominated by {winner.nominator}. Chosen by {ballots.length} ballot{ballots.length === 1 ? "" : "s"}.
             </p>
           </>
         ) : (
           <>
-            <h1 className="mt-1 font-pixel text-4xl leading-tight sm:text-5xl">Pick {month}&apos;s game</h1>
+            <h2 className="font-pixel text-3xl leading-tight sm:text-4xl">Pick {month}&apos;s game</h2>
             <p className="mt-3 max-w-[60ch]">
               {cycle.phase === "nominating" ? (
                 <>
@@ -108,13 +139,6 @@ export default async function GameOfTheMonth() {
 
       {user?.isAdmin && (
         <AdminControls phase={cycle.phase} opensAt={when(cycle.opensAt)} closesAt={when(cycle.closesAt)} />
-      )}
-
-      {cycle.phase === "nominating" && nowPlaying && (
-        <section className="border-l-4 border-purple pl-3">
-          Playing now for the {monthName(previousKey(cycle.key))} meetup: <strong>{nowPlaying.title}</strong> ({nowPlaying.platform}).{" "}
-          <Link href="/" className="underline">Details</Link>
-        </section>
       )}
 
       {cycle.phase !== "nominating" && ballots.length > 0 && (

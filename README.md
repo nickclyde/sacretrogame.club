@@ -14,6 +14,14 @@ before it ends, and the page shows the instant runoff count live so the room can
 watch the winner come in. People sign in with Discord (members of the club
 server), Google, or a link sent by email.
 
+`/game-of-the-month/leaderboard` tracks who finished each month's game. Members
+tick a box on the honor system, or link a
+[RetroAchievements](https://retroachievements.org) account on their account page
+so that "Game Beaten" awards for the month's game show up by themselves (only
+awards earned after the game was picked count). Late finishes of older picks
+count too. There is also an all-time board. The RetroAchievements sets for a
+vote winner come from Wikidata, and hosts can change them on their account page.
+
 ## Develop
 
 ```sh
@@ -43,6 +51,7 @@ to the server log instead of emailed.
 | `RESEND_API_KEY`, `EMAIL_FROM` | Sends sign-in links. `EMAIL_FROM` defaults to `Sac Retro Game Club <login@sacretrogame.club>` |
 | `DISCORD_GOTM_WEBHOOK_URL` | Optional. Channel webhook for new nominations, voting opening, and the winner |
 | `ADMIN_DISCORD_IDS`, `ADMIN_EMAILS` | Comma separated. Hosts who can open or close the game vote early and remove nominations |
+| `RA_API_KEY` | Optional. RetroAchievements web API key (from any RA account's settings). Without it, linking RetroAchievements is hidden and only the honor system box works |
 
 Poll options live in `src/data/polls.ts` and branches in `src/data/libraries.ts`.
 The meeting schedule shown on the homepage lives in `src/data/meeting.ts`, and the
@@ -70,4 +79,6 @@ For the game of the month, the site stores each member's display name, the id
 Discord or Google gives their account, and their email address (only for signing
 in and recognizing the same person across sign-in options, never shown).
 Session and sign-in link tokens are stored only as hashes. Who voted is public;
-how anyone ranked the games is not.
+how anyone ranked the games is not. Who finished each game is public. Members who
+link RetroAchievements have their RA username stored and linked from the
+leaderboard, and the site reads only their public awards.

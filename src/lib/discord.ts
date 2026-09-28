@@ -8,6 +8,7 @@ import { LABELS, computeResults, headline } from "./results";
 
 const RESULTS_URL = "https://sacretrogame.club/results";
 const GOTM_URL = "https://sacretrogame.club/game-of-the-month";
+const LEADERBOARD_URL = "https://sacretrogame.club/game-of-the-month/leaderboard";
 
 // Names, game titles, and pitches are typed by members, so keep them from formatting or pinging.
 export function plain(name: string) {
@@ -117,5 +118,15 @@ export function winnerMessage(cycleKey: string, winner: Nomination, result: IrvR
   return [
     `🏆 ${monthName(cycleKey)}'s game of the month is ${gameLine(winner)}, nominated by ${plain(winner.nominator)}!`,
     `It won with ${last.tallies[winner.id]} of ${counted} ballots ${rounds}. Round by round: <${GOTM_URL}>`,
+  ].join("\n");
+}
+
+export type FinishNote = { via: "honor" | "ra"; mastered: boolean; hardcore: boolean };
+
+export function finishedMessage(month: string, name: string, title: string, f: FinishNote, count: number) {
+  const how = f.via === "ra" ? ` (${f.mastered ? "mastered" : "beaten"} on RetroAchievements${f.hardcore ? " in hardcore" : ""})` : "";
+  return [
+    `🏁 **${plain(name)}** finished **${plain(title)}**, ${monthName(month)}'s game of the month${how}!`,
+    `${count} ${count === 1 ? "member has" : "members have"} finished it so far: <${LEADERBOARD_URL}>`,
   ].join("\n");
 }

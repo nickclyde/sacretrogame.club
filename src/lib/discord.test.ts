@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Ballot } from "./ballot";
-import { ballotMessage, nominationMessage, votingOpenMessage, winnerMessage } from "./discord";
+import { ballotMessage, finishedMessage, nominationMessage, votingOpenMessage, winnerMessage } from "./discord";
 import { gotmCycle, gotmResults, type Nomination } from "./gotm";
 
 const ballot = (name: string, slots: string[], weeks: string[], libraries: string[]): Ballot => ({
@@ -81,5 +81,19 @@ describe("game of the month messages", () => {
     const msg = winnerMessage("2026-11", noms.find((n) => n.id === result.winner)!, result);
     expect(msg).toContain("🏆 November's game of the month is **Chrono Trigger** (SNES, 1995), nominated by Ana!");
     expect(msg).toContain("It won with 3 of 5 ballots after 2 rounds");
+  });
+});
+
+describe("finishedMessage", () => {
+  it("cheers a finish, escaping the name", () => {
+    const msg = finishedMessage("2026-10", "*Ana*", "A Link to the Past", { via: "honor", mastered: false, hardcore: false }, 1);
+    expect(msg).toContain("🏁 **\\*Ana\\*** finished **A Link to the Past**, October's game of the month!");
+    expect(msg).toContain("1 member has finished it so far");
+  });
+
+  it("says how RetroAchievements saw it", () => {
+    const msg = finishedMessage("2026-10", "Bo", "A Link to the Past", { via: "ra", mastered: true, hardcore: true }, 3);
+    expect(msg).toContain("(mastered on RetroAchievements in hardcore)!");
+    expect(msg).toContain("3 members have finished it so far");
   });
 });
