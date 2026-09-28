@@ -70,6 +70,12 @@ function itemIds(e: Entity, property: string): string[] {
   return values(e, property).map((v) => (v as { id: string }).id);
 }
 
+/** RetroAchievements game ids (property P11393). A game can have a set per platform. */
+export function retroAchievementsIds(e: Entity): number[] {
+  const ids = values(e, "P11393").map(Number).filter((id) => Number.isInteger(id) && id > 0);
+  return [...new Set(ids)];
+}
+
 /** A video game with an English Wikipedia article, which supplies the info link and box art. */
 export function isGame(e: Entity) {
   return Boolean(e.sitelinks?.enwiki) && itemIds(e, "P31").includes(VIDEO_GAME);
@@ -242,4 +248,11 @@ export async function getGame(id: string): Promise<Game | null> {
   if (!QID.test(id)) return null;
   const e = (await entities([id], "labels|claims|sitelinks"))[id];
   return e && isGame(e) ? (await games([e]))[0] : null;
+}
+
+/** The RetroAchievements game ids Wikidata lists for a game. */
+export async function getRetroAchievementsIds(id: string): Promise<number[]> {
+  if (!QID.test(id)) return [];
+  const e = (await entities([id], "claims"))[id];
+  return e ? retroAchievementsIds(e) : [];
 }

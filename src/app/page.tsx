@@ -4,6 +4,7 @@ import { VenueMap } from "@/components/VenueMap";
 import { DISCORD_INVITE_URL } from "@/data/club";
 import { directionsUrl, fullAddress } from "@/data/libraries";
 import { MEETING, MEETING_LIBRARY } from "@/data/meeting";
+import { countFinishers, syncRaLater } from "@/lib/finishers";
 import { pickForMonth } from "@/lib/game-picks";
 import { monthKey, monthName } from "@/lib/gotm";
 import { currentCycle } from "@/lib/gotm-db";
@@ -19,8 +20,9 @@ export default async function Home() {
   const date = start.toLocaleDateString("en-US", { timeZone: TZ, weekday: "long", month: "long", day: "numeric" });
   const weekday = start.toLocaleDateString("en-US", { timeZone: TZ, weekday: "long" });
   const hour = (d: Date) => d.toLocaleTimeString("en-US", { timeZone: TZ, hour: "numeric" });
-  const game = await pickForMonth(monthKey(start));
-  const cycle = await currentCycle();
+  const month = monthKey(start);
+  const [game, cycle, finished] = await Promise.all([pickForMonth(month), currentCycle(), countFinishers(month)]);
+  syncRaLater();
 
   return (
     <div className="flex flex-col gap-12">
@@ -115,6 +117,16 @@ export default async function Home() {
                 </a>
               </p>
             )}
+            <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
+              <Link href="/game-of-the-month/leaderboard" className="pixel-btn inline-block bg-yellow text-xl">
+                🏁 Leaderboard
+              </Link>
+              <span>
+                {finished === 0
+                  ? "Nobody has finished it yet. Be the first!"
+                  : `${finished} ${finished === 1 ? "member has" : "members have"} finished it.`}
+              </span>
+            </div>
           </div>
         )}
         <p className="max-w-[60ch]">

@@ -26,8 +26,28 @@ export async function setVoteTimes(key: string, times: { opensAt?: Date | null; 
 export async function resetVoteTimes(key: string) {
   await sql`
     update gotm_cycles
-    set vote_opens_at = null, vote_closes_at = null, opened_announced_at = null, winner_announced_at = null, winner_nomination_id = null
+    set vote_opens_at = null, vote_closes_at = null, opened_announced_at = null, winner_announced_at = null,
+        winner_nomination_id = null, ra_game_ids = null
     where key = ${key}`;
+}
+
+/**
+ * The RetroAchievements games whose awards count for a month. A host can set them any time;
+ * the ids Wikidata lists for the winner are stored only if nothing is set yet.
+ */
+export async function setRaGameIds(key: string, ids: number[], opts: { onlyIfUnset?: boolean } = {}) {
+  const json = JSON.stringify(ids);
+  if (opts.onlyIfUnset) {
+    await sql`
+      insert into gotm_cycles (key, ra_game_ids) values (${key}, ${json})
+      on conflict (key) do update set ra_game_ids = excluded.ra_game_ids where gotm_cycles.ra_game_ids is null`;
+    return;
+  }
+  await sql`
+    insert into gotm_cycles (key, ra_game_ids) values (${key}, ${json})
+    on conflict (key) do update set ra_game_ids = excluded.ra_game_ids`;
+  // Check everyone's awards against the new list on the next page load.
+  await sql`update users set ra_synced_at = null where ra_ulid is not null`;
 }
 
 type NominationRow = {

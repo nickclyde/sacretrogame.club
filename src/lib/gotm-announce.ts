@@ -1,7 +1,8 @@
 import { after } from "next/server";
 import { announceGotm, votingOpenMessage, winnerMessage } from "./discord";
 import { gotmResults, type Cycle, type Nomination } from "./gotm";
-import { claimAnnouncement, listGameBallots, listNominations, storedWinner } from "./gotm-db";
+import { claimAnnouncement, listGameBallots, listNominations, setRaGameIds, storedWinner } from "./gotm-db";
+import { getRetroAchievementsIds } from "./wikidata";
 
 /**
  * Posts "voting is open" and the winner to Discord the first time any request notices those
@@ -26,6 +27,17 @@ export async function settle(key: string): Promise<Nomination | null> {
   const winner = nominations.find((n) => n.id === result.winner) ?? null;
   if ((await claimAnnouncement(key, "winner", winner?.id ?? null)) && winner) {
     after(() => announceGotm(winnerMessage(key, winner, result)));
+    if (winner.wikidataId) after(() => storeRaGameIds(key, winner.wikidataId!));
   }
   return winner;
+}
+
+/** Looks up the winner's RetroAchievements sets, so members' awards count on the leaderboard. */
+async function storeRaGameIds(key: string, wikidataId: string) {
+  try {
+    const ids = await getRetroAchievementsIds(wikidataId);
+    if (ids.length) await setRaGameIds(key, ids, { onlyIfUnset: true });
+  } catch (e) {
+    console.error("Couldn't look up RetroAchievements ids on Wikidata", e);
+  }
 }

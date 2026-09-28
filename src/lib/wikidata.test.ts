@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gameTitle, isGame, rank, toGame, type Entity } from "./wikidata";
+import { gameTitle, isGame, rank, retroAchievementsIds, toGame, type Entity } from "./wikidata";
 
 const claim = (value: unknown, rank = "normal") => ({ mainsnak: { datavalue: { value } }, rank });
 const item = (id: string) => claim({ id });
@@ -88,5 +88,14 @@ describe("rank", () => {
     const b = entity("Qb", "Kirby Super Star", {}, 19);
     const c = entity("Qc", "Kirby's Dream Land", {}, 25);
     expect(rank([b, a, c], "kirby").map((e) => e.id)).toEqual(["Qa", "Qc", "Qb"]);
+  });
+});
+
+describe("retroAchievementsIds", () => {
+  it("reads P11393 as numbers, once each", () => {
+    const e = entity("Q370055", "The Legend of Zelda: A Link to the Past", {
+      claims: { P31: [item("Q7889")], P11393: [claim("355"), claim("355"), claim("7000"), claim("1", "deprecated")] },
+    });
+    expect(retroAchievementsIds(e)).toEqual([355, 7000]);
   });
 });
