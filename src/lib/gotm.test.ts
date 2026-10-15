@@ -29,8 +29,8 @@ describe("gotmCycle", () => {
 
   it("follows Pacific time across the fall DST change", () => {
     const c = gotmCycle(at("2026-10-20T12:00:00-07:00"));
-    expect(c.meeting.start).toEqual(at("2026-11-11T18:00:00-08:00"));
-    expect(c.opensAt).toEqual(at("2026-11-11T17:00:00-08:00"));
+    expect(c.meeting.start).toEqual(at("2026-11-18T18:00:00-08:00"));
+    expect(c.opensAt).toEqual(at("2026-11-18T17:00:00-08:00"));
   });
 
   it("rolls over the year", () => {

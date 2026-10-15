@@ -3,12 +3,12 @@ import Link from "next/link";
 import { VenueMap } from "@/components/VenueMap";
 import { DISCORD_INVITE_URL } from "@/data/club";
 import { directionsUrl, fullAddress } from "@/data/libraries";
-import { MEETING, MEETING_LIBRARY } from "@/data/meeting";
+import { MEETINGS, MEETING_LIBRARY } from "@/data/meeting";
 import { countFinishers, syncRaLater } from "@/lib/finishers";
 import { pickForMonth } from "@/lib/game-picks";
 import { monthKey, monthName } from "@/lib/gotm";
 import { currentCycle } from "@/lib/gotm-db";
-import { TZ, nextMeeting } from "@/lib/meeting";
+import { TZ, nextMeeting, ruleFor } from "@/lib/meeting";
 
 // The next meeting date depends on the current time.
 export const dynamic = "force-dynamic";
@@ -16,11 +16,13 @@ export const dynamic = "force-dynamic";
 const ORDINALS = ["1st", "2nd", "3rd", "4th"];
 
 export default async function Home() {
-  const { start, end } = nextMeeting(MEETING);
+  const { start, end } = nextMeeting(MEETINGS);
   const date = start.toLocaleDateString("en-US", { timeZone: TZ, weekday: "long", month: "long", day: "numeric" });
   const weekday = start.toLocaleDateString("en-US", { timeZone: TZ, weekday: "long" });
-  const hour = (d: Date) => d.toLocaleTimeString("en-US", { timeZone: TZ, hour: "numeric" });
+  const hour = (d: Date) =>
+    d.toLocaleTimeString("en-US", { timeZone: TZ, hour: "numeric", minute: d.getUTCMinutes() ? "2-digit" : undefined });
   const month = monthKey(start);
+  const rule = ruleFor(MEETINGS, month);
   const [game, cycle, finished] = await Promise.all([pickForMonth(month), currentCycle(), countFinishers(month)]);
   syncRaLater();
 
@@ -68,8 +70,9 @@ export default async function Home() {
         </div>
         <VenueMap library={MEETING_LIBRARY} />
         <p className="mt-6 text-sm">
-          We meet on the {ORDINALS[MEETING.week - 1]} {weekday} of every month. Members picked the schedule by
-          ranked choice vote. <Link href="/results" className="underline">See how the vote went</Link>.
+          We meet on the {ORDINALS[rule.week - 1]} {weekday} of every month. Members picked the schedule by
+          ranked choice vote, then we moved from the 2nd to the 3rd week because the room was booked.{" "}
+          <Link href="/results" className="underline">See how the vote went</Link>.
         </p>
       </section>
 

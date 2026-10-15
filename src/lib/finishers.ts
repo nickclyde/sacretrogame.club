@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { GAME_PICKS, type GamePick } from "@/data/games";
-import { MEETING } from "@/data/meeting";
+import { MEETINGS } from "@/data/meeting";
 import { sql } from "./db";
 import { announceGotm, finishedMessage } from "./discord";
 import { pickForMonth } from "./game-picks";
@@ -37,12 +37,12 @@ const iso = (d: Date | null) => (d ? d.toISOString() : null);
 /** The meetup held in a month, given as YYYY-MM. */
 function meetupIn(key: string) {
   const [y, m] = key.split("-").map(Number);
-  return nextMeeting(MEETING, new Date(Date.UTC(y, m - 1, 1, 12)));
+  return nextMeeting(MEETINGS, new Date(Date.UTC(y, m - 1, 1, 12)));
 }
 
 /** The month whose game is being played now: the one discussed at the next meetup. */
 export function playingMonth(now = new Date()) {
-  return monthKey(nextMeeting(MEETING, now).start);
+  return monthKey(nextMeeting(MEETINGS, now).start);
 }
 
 /** Every month with a game, newest first, up to the one being played now. */

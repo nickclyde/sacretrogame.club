@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { nextMeeting } from "./meeting";
 
 // 2nd Wednesday, 6 to 8 PM Pacific.
-const RULE = { week: 2, weekday: 3, startHour: 18, endHour: 20 };
+const RULE = { from: "2026-01", week: 2, weekday: 3, startHour: 18, endHour: 20 };
 
-const start = (now: string) => nextMeeting(RULE, new Date(now)).start.toISOString();
+const start = (now: string) => nextMeeting([RULE], new Date(now)).start.toISOString();
 
 describe("nextMeeting", () => {
   it("finds the 2nd Wednesday of next month once this month's has passed", () => {
@@ -20,7 +20,7 @@ describe("nextMeeting", () => {
   });
 
   it("moves to the next month when the meeting ends, across the DST change", () => {
-    const { start, end } = nextMeeting(RULE, new Date("2026-10-14T20:00:00-07:00"));
+    const { start, end } = nextMeeting([RULE], new Date("2026-10-14T20:00:00-07:00"));
     expect(start.toISOString()).toBe("2026-11-12T02:00:00.000Z");
     expect(end.toISOString()).toBe("2026-11-12T04:00:00.000Z");
   });
@@ -32,5 +32,14 @@ describe("nextMeeting", () => {
   it("uses the Pacific month, not the UTC one", () => {
     // Already October in UTC, still September 30 in Sacramento.
     expect(start("2026-10-01T05:00:00Z")).toBe("2026-10-15T01:00:00.000Z");
+  });
+
+
+  it("switches rules in the month a new one starts, keeping past meetups", () => {
+    const rules = [RULE, { from: "2026-11", week: 3, weekday: 3, startHour: 18, endHour: 20.5 }];
+    expect(nextMeeting(rules, new Date("2026-10-14T19:00:00-07:00")).start.toISOString()).toBe("2026-10-15T01:00:00.000Z");
+    const { start, end } = nextMeeting(rules, new Date("2026-10-15T12:00:00-07:00"));
+    expect(start.toISOString()).toBe("2026-11-19T02:00:00.000Z");
+    expect(end.toISOString()).toBe("2026-11-19T04:30:00.000Z");
   });
 });

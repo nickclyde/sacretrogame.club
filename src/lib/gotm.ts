@@ -1,4 +1,4 @@
-import { MEETING } from "@/data/meeting";
+import { MEETINGS } from "@/data/meeting";
 import { VOTE_CLOSES_BEFORE_END_MIN, VOTE_OPENS_BEFORE_START_MIN } from "@/data/gotm";
 import { tally, type IrvResult } from "./irv";
 import { TZ, nextMeeting } from "./meeting";
@@ -44,7 +44,7 @@ export function monthName(key: string) {
  * that meetup ends, then the following month's nominations open.
  */
 export function gotmCycle(now = new Date(), overrides: Overrides = { voteOpensAt: null, voteClosesAt: null }): Cycle {
-  const meeting = nextMeeting(MEETING, now);
+  const meeting = nextMeeting(MEETINGS, now);
   const opensAt = overrides.voteOpensAt ?? new Date(meeting.start.getTime() - VOTE_OPENS_BEFORE_START_MIN * MINUTE);
   const closesAt = overrides.voteClosesAt ?? new Date(meeting.end.getTime() - VOTE_CLOSES_BEFORE_END_MIN * MINUTE);
   const phase: Phase = now < opensAt ? "nominating" : now < closesAt ? "voting" : "closed";
