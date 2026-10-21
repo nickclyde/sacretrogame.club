@@ -6,7 +6,7 @@ import { announceGotm, finishedMessage } from "./discord";
 import { pickForMonth } from "./game-picks";
 import { monthKey, previousKey } from "./gotm";
 import { nextMeeting } from "./meeting";
-import { raConfigured, raGameIdFromUrl, userAwards, type RaAward, type RaUser } from "./retroachievements";
+import { gameProgress, raConfigured, raGameIdFromUrl, userAwards, type RaAward, type RaProgress, type RaUser } from "./retroachievements";
 
 // Who finished each month's game of the month. Members tick a box on the honor system, or link
 // a RetroAchievements account and the site picks up their "Game Beaten" awards. There is no
@@ -204,16 +204,31 @@ export async function syncRa(onlyUserId?: string): Promise<string[]> {
         and (ra_synced_at is null or ra_synced_at < now() - make_interval(mins => ${RECHECK_MIN}))
         returning id, ra_ulid`;
 
+  // Progress only matters for the game being played, and only until someone finishes it.
+  const playing = months.find((m) => m.key === playingMonth());
+  const finished = playing
+    ? new Set(
+        (await sql<{ user_id: string }>`select user_id from completions where month = ${playing.key} and removed_at is null`).map(
+          (r) => r.user_id,
+        ),
+      )
+    : new Set<string>();
+
   const messages: string[] = [];
   for (const user of users) {
     let awards: RaAward[];
+    let progress: { gameId: number; progress: RaProgress } | null;
     try {
-      awards = await userAwards(user.ra_ulid);
+      [awards, progress] = await Promise.all([
+        userAwards(user.ra_ulid),
+        playing && !finished.has(user.id) ? bestProgress(user.ra_ulid, playing) : null,
+      ]);
     } catch (e) {
       if (onlyUserId) throw e;
       console.error("RetroAchievements check failed", e);
       continue;
     }
+    if (playing && progress) await recordProgress(playing.key, user.id, progress.gameId, progress.progress);
     for (const [key, finish] of matchAwards(awards, months)) {
       await recordRaFinish(key, user.id, finish);
       const message = await claimShoutOut(months.find((m) => m.key === key)!, user.id);
@@ -221,6 +236,76 @@ export async function syncRa(onlyUserId?: string): Promise<string[]> {
     }
   }
   return messages;
+}
+
+const stepRatio = (p: RaProgress) => (p.stepsTotal ? p.stepsDone / p.stepsTotal : 0);
+const ahead = (a: RaProgress, b: RaProgress) => stepRatio(a) - stepRatio(b) || a.earned - b.earned;
+
+/** A member's progress on whichever of the month's RA sets they're furthest along in. */
+async function bestProgress(ulid: string, month: FinishMonth) {
+  const all = await Promise.all(
+    month.raGameIds.map(async (gameId) => ({ gameId, progress: await gameProgress(ulid, gameId, month.since) })),
+  );
+  let best: { gameId: number; progress: RaProgress } | null = null;
+  for (const { gameId, progress } of all) {
+    if (progress && (!best || ahead(progress, best.progress) > 0)) best = { gameId, progress };
+  }
+  return best;
+}
+
+export async function recordProgress(month: string, userId: string, gameId: number, p: RaProgress) {
+  await sql`
+    insert into ra_progress (month, user_id, ra_game_id, steps_done, steps_total, beatable, earned, total, last_title, last_badge, last_at)
+    values (${month}, ${userId}, ${gameId}, ${p.stepsDone}, ${p.stepsTotal}, ${p.beatable}, ${p.earned}, ${p.total},
+      ${p.last?.title ?? null}, ${p.last?.badge ?? null}, ${iso(p.last?.at ?? null)})
+    on conflict (month, user_id) do update set
+      ra_game_id = excluded.ra_game_id, steps_done = excluded.steps_done, steps_total = excluded.steps_total,
+      beatable = excluded.beatable, earned = excluded.earned, total = excluded.total,
+      last_title = excluded.last_title, last_badge = excluded.last_badge, last_at = excluded.last_at,
+      updated_at = now()`;
+}
+
+export type Progress = Omit<RaProgress, "last"> & {
+  userId: string;
+  name: string;
+  raUsername: string | null;
+  last: { title: string; badge: string; at: Date } | null;
+};
+
+type ProgressRow = {
+  user_id: string;
+  display_name: string;
+  ra_username: string | null;
+  steps_done: number;
+  steps_total: number;
+  beatable: boolean;
+  earned: number;
+  total: number;
+  last_title: string | null;
+  last_badge: string | null;
+  last_at: string | Date | null;
+};
+
+/** Linked members partway through a month's game, furthest along first. Finishers are on the board instead. */
+export async function listProgress(month: string): Promise<Progress[]> {
+  const rows = await sql<ProgressRow>`
+    select p.user_id, u.display_name, u.ra_username, p.steps_done, p.steps_total, p.beatable, p.earned, p.total,
+      p.last_title, p.last_badge, p.last_at
+    from ra_progress p join users u on u.id = p.user_id
+    where p.month = ${month} and p.earned > 0 and u.ra_ulid is not null
+      and not exists (select 1 from completions c where c.month = p.month and c.user_id = p.user_id and c.removed_at is null)
+    order by p.steps_done::float / greatest(p.steps_total, 1) desc, p.earned desc, p.last_at`;
+  return rows.map((r) => ({
+    userId: r.user_id,
+    name: r.display_name,
+    raUsername: r.ra_username,
+    stepsDone: r.steps_done,
+    stepsTotal: r.steps_total,
+    beatable: r.beatable,
+    earned: r.earned,
+    total: r.total,
+    last: r.last_title && r.last_badge && r.last_at ? { title: r.last_title, badge: r.last_badge, at: new Date(r.last_at) } : null,
+  }));
 }
 
 /** Checks a few linked accounts after the response is sent, so pages never wait on RetroAchievements. */
@@ -252,7 +337,8 @@ export async function linkRa(userId: string, ra: RaUser): Promise<boolean> {
   }
 }
 
-/** Forgets the RA account. Finishes it already found stay on the board. */
+/** Forgets the RA account. Finishes it already found stay on the board, but progress goes. */
 export async function unlinkRa(userId: string) {
   await sql`update users set ra_ulid = null, ra_username = null, ra_synced_at = null where id = ${userId}`;
+  await sql`delete from ra_progress where user_id = ${userId}`;
 }

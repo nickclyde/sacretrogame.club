@@ -2,10 +2,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { FinishedToggle } from "@/components/FinishedToggle";
 import { getUser } from "@/lib/auth/session";
-import { allTime, finishMonths, listFinishers, syncRaLater, type Finisher, type FinishMonth } from "@/lib/finishers";
+import {
+  allTime,
+  finishMonths,
+  listFinishers,
+  listProgress,
+  playingMonth,
+  syncRaLater,
+  type Finisher,
+  type FinishMonth,
+  type Progress,
+} from "@/lib/finishers";
 import { monthName } from "@/lib/gotm";
 import { TZ } from "@/lib/meeting";
-import { raConfigured, raProfileUrl } from "@/lib/retroachievements";
+import { raBadgeUrl, raConfigured, raProfileUrl } from "@/lib/retroachievements";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -24,7 +34,8 @@ function ordinal(n: number) {
 const day = (d: Date) => d.toLocaleDateString("en-US", { timeZone: TZ, month: "short", day: "numeric" });
 
 export default async function Finishers() {
-  const [user, months, finishers] = await Promise.all([getUser(), finishMonths(), listFinishers()]);
+  const playing = playingMonth();
+  const [user, months, finishers, progress] = await Promise.all([getUser(), finishMonths(), listFinishers(), listProgress(playing)]);
   syncRaLater();
   const board = allTime(finishers);
 
@@ -42,8 +53,8 @@ export default async function Finishers() {
         {raConfigured() && (
           <p className="mt-3 max-w-[60ch]">
             Playing with RetroAchievements?{" "}
-            <Link href="/account" className="underline">Link your account</Link> and beaten games show up here by
-            themselves.
+            <Link href="/account" className="underline">Link your account</Link> and your progress on this
+            month&apos;s game, and the games you beat, show up here by themselves.
           </p>
         )}
       </section>
@@ -55,6 +66,7 @@ export default async function Finishers() {
           key={m.key}
           month={m}
           finishers={finishers.filter((f) => f.month === m.key)}
+          progress={m.key === playing ? progress : []}
           userId={user?.id ?? null}
         />
       ))}
@@ -80,7 +92,17 @@ export default async function Finishers() {
   );
 }
 
-function MonthBoard({ month, finishers, userId }: { month: FinishMonth; finishers: Finisher[]; userId: string | null }) {
+function MonthBoard({
+  month,
+  finishers,
+  progress,
+  userId,
+}: {
+  month: FinishMonth;
+  finishers: Finisher[];
+  progress: Progress[];
+  userId: string | null;
+}) {
   const { pick } = month;
   const mine = finishers.find((f) => f.userId === userId);
 
@@ -144,6 +166,64 @@ function MonthBoard({ month, finishers, userId }: { month: FinishMonth; finisher
           ))}
         </ol>
       )}
+
+      {progress.length > 0 && (
+        <>
+          <h3 className="mb-3 mt-6 font-pixel text-xl">Still playing</h3>
+          <ol className="flex flex-col gap-2">
+            {progress.map((p) => (
+              <ProgressRow key={p.userId} progress={p} />
+            ))}
+          </ol>
+        </>
+      )}
     </section>
+  );
+}
+
+/** A linked member partway through the game, from RetroAchievements. */
+function ProgressRow({ progress: p }: { progress: Progress }) {
+  // Rounded down, so nobody shows 100% before RA says they beat it.
+  const percent = Math.floor((p.stepsDone / Math.max(p.stepsTotal, 1)) * 100);
+  return (
+    <li className="border-[3px] border-ink bg-field px-3 py-2">
+      <div className="flex items-baseline justify-between gap-3">
+        {p.raUsername ? (
+          <a href={raProfileUrl(p.raUsername)} target="_blank" rel="noreferrer" className="min-w-0 font-bold underline">
+            {p.name}
+          </a>
+        ) : (
+          <span className="min-w-0 font-bold">{p.name}</span>
+        )}
+        <span className="shrink-0 font-pixel text-xl">{percent}%</span>
+      </div>
+      <div
+        role="img"
+        aria-label={`${percent}% of the way to beating it`}
+        className="mt-1 h-4 border-[3px] border-ink bg-panel"
+      >
+        <div className="h-full bg-green" style={{ width: `${percent}%` }} />
+      </div>
+      <p className="mt-1 text-sm text-muted">
+        {p.beatable && `${p.stepsDone} of ${p.stepsTotal} to beat · `}
+        {p.earned} of {p.total} achievements
+      </p>
+      {p.last && (
+        <p className="mt-2 flex items-center gap-2 text-sm">
+          <Image
+            src={raBadgeUrl(p.last.badge)}
+            alt=""
+            width={64}
+            height={64}
+            unoptimized
+            className="size-8 shrink-0 border-2 border-ink [image-rendering:pixelated]"
+          />
+          <span className="min-w-0">
+            Latest: <span className="font-bold">{p.last.title}</span>{" "}
+            <span className="text-muted">({day(p.last.at)})</span>
+          </span>
+        </p>
+      )}
+    </li>
   );
 }

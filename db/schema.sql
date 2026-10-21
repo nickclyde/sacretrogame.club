@@ -112,3 +112,21 @@ create table if not exists completions (
   created_at   timestamptz not null default now(),
   primary key (month, user_id)
 );
+
+-- A linked member's RetroAchievements progress on the game being played, counting only
+-- achievements earned since the pick. Refreshed along with the finish checks.
+create table if not exists ra_progress (
+  month       text not null, -- Same keys as completions.
+  user_id     uuid not null references users on delete cascade,
+  ra_game_id  int not null, -- The set with the most progress, if the month has several.
+  steps_done  int not null, -- Toward "Game Beaten": progression achievements plus the win condition,
+  steps_total int not null, -- or every achievement if the set has neither type.
+  beatable    boolean not null,
+  earned      int not null,
+  total       int not null,
+  last_title  text,
+  last_badge  text,
+  last_at     timestamptz,
+  updated_at  timestamptz not null default now(),
+  primary key (month, user_id)
+);

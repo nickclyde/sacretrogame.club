@@ -123,8 +123,8 @@ export default async function Account(props: PageProps<"/account">) {
                 <a href={raProfileUrl(raAccount.username)} target="_blank" rel="noreferrer" className="font-bold underline">
                   {raAccount.username}
                 </a>
-                . When you beat a game of the month, it shows up on the{" "}
-                <Link href="/game-of-the-month/leaderboard" className="underline">leaderboard</Link> by itself.
+                . Your progress on this month&apos;s game, and the games of the month you beat, show up on the{" "}
+                <Link href="/game-of-the-month/leaderboard" className="underline">leaderboard</Link> by themselves.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <form method="post" action="/api/account/retroachievements">
@@ -141,9 +141,10 @@ export default async function Account(props: PageProps<"/account">) {
             <form method="post" action="/api/account/retroachievements">
               <input type="hidden" name="action" value="link" />
               <p className="mb-3 mt-2 text-muted">
-                Link your account and games of the month you beat show up on the{" "}
+                Link your account and your progress on this month&apos;s game (including your latest achievement),
+                and the games of the month you beat, show up on the{" "}
                 <Link href="/game-of-the-month/leaderboard" className="underline">leaderboard</Link> by themselves.
-                The site only reads your public awards, and shows your RetroAchievements username there.
+                The site only reads your public awards and progress, and shows your RetroAchievements username there.
               </p>
               <label htmlFor="ra-username" className="sr-only">RetroAchievements username</label>
               <div className="flex flex-wrap gap-3">

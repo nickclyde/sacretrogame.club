@@ -6,10 +6,12 @@ import {
   claimShoutOut,
   finishMonths,
   listFinishers,
+  listProgress,
   matchAwards,
   recordRaFinish,
   setHonorFinish,
   syncRa,
+  unlinkRa,
   type Finisher,
 } from "./finishers";
 import { setRaGameIds } from "./gotm-db";
@@ -100,21 +102,78 @@ describe("syncRa", () => {
     const ana = await user("Ana");
     await user("Bo");
     await sql`update users set ra_ulid = 'ULID-ANA', ra_username = 'ana_ra' where id = ${ana}`;
-    const fetch = vi.fn<(url: string) => Promise<Response>>(async () =>
-      Response.json({ VisibleUserAwards: [{ AwardedAt: "2026-09-28T00:00:00+00:00", AwardType: "Game Beaten", AwardData: 355, AwardDataExtra: 1 }] }),
+    const fetch = vi.fn<(url: string) => Promise<Response>>(async (url) =>
+      Response.json(
+        url.includes("API_GetUserAwards")
+          ? { VisibleUserAwards: [{ AwardedAt: "2026-09-28T00:00:00+00:00", AwardType: "Game Beaten", AwardData: 355, AwardDataExtra: 1 }] }
+          : { Achievements: {} },
+      ),
     );
     vi.stubGlobal("fetch", fetch);
 
     const messages = await syncRa();
     expect(messages).toEqual([expect.stringContaining("(beaten on RetroAchievements in hardcore)")]);
-    expect(String(fetch.mock.calls[0][0])).toContain("API_GetUserAwards.php?u=ULID-ANA&y=test-key");
+    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
+      expect.stringContaining("API_GetUserAwards.php?u=ULID-ANA&y=test-key"),
+      expect.stringContaining("API_GetGameInfoAndUserProgress.php?g=355&u=ULID-ANA&y=test-key"),
+    ]);
     expect(await listFinishers()).toMatchObject([{ name: "Ana", via: "ra", raUsername: "ana_ra" }]);
 
     expect(await syncRa()).toEqual([]);
-    expect(fetch).toHaveBeenCalledTimes(1);
-    // Asking for one member skips the wait, and a finish that's already recorded isn't posted again.
-    expect(await syncRa(ana)).toEqual([]);
     expect(fetch).toHaveBeenCalledTimes(2);
+    // Asking for one member skips the wait, and a finish that's already recorded isn't posted again.
+    // Now that she's finished, her progress isn't fetched.
+    expect(await syncRa(ana)).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("records progress on the game being played for members who haven't finished it", async () => {
+    vi.stubEnv("RA_API_KEY", "test-key");
+    const [ana, bo, cy, di] = await Promise.all(["Ana", "Bo", "Cy", "Di"].map(user));
+    for (const [id, ulid] of [[ana, "ANA"], [bo, "BO"], [cy, "CY"], [di, "DI"]]) {
+      await sql`update users set ra_ulid = ${ulid}, ra_username = ${ulid.toLowerCase()} where id = ${id}`;
+    }
+    await setHonorFinish(OCT, cy, true);
+
+    // Two progression achievements and a win condition make three steps toward beaten.
+    const set = (earned: Record<string, string>) => ({
+      Achievements: Object.fromEntries(
+        ["Eastern Palace", "Desert Palace", "Ganon", "Bottle"].map((title, i) => [
+          i + 1,
+          {
+            Title: title,
+            BadgeName: String(100 + i),
+            Type: ["progression", "progression", "win_condition", null][i],
+            ...(earned[title] && { DateEarned: earned[title] }),
+          },
+        ]),
+      ),
+    });
+    const sets: Record<string, object> = {
+      ANA: set({ "Eastern Palace": "2026-09-20 03:00:00", Bottle: "2026-09-25 04:00:00" }),
+      BO: set({ "Eastern Palace": "2026-09-15 03:00:00", "Desert Palace": "2026-09-18 03:00:00" }),
+      DI: set({ "Eastern Palace": "2026-08-01 03:00:00" }), // Before the pick, so it doesn't count.
+    };
+    const fetch = vi.fn<(url: string) => Promise<Response>>(async (url) => {
+      const params = new URL(url).searchParams;
+      return Response.json(url.includes("API_GetUserAwards") ? { VisibleUserAwards: [] } : sets[params.get("u")!]);
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    expect(await syncRa()).toEqual([]);
+    expect(fetch.mock.calls.some(([url]) => String(url).includes("API_GetGameInfoAndUserProgress.php?g=355&u=CY"))).toBe(false);
+    expect(await listProgress(OCT)).toEqual([
+      expect.objectContaining({ name: "Bo", raUsername: "bo", stepsDone: 2, stepsTotal: 3, earned: 2, total: 4 }),
+      expect.objectContaining({
+        name: "Ana",
+        stepsDone: 1,
+        earned: 2,
+        last: { title: "Bottle", badge: "103", at: new Date("2026-09-25T04:00:00Z") },
+      }),
+    ]);
+
+    await unlinkRa(bo);
+    expect((await listProgress(OCT)).map((p) => p.name)).toEqual(["Ana"]);
   });
 });
 
