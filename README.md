@@ -19,7 +19,10 @@ tick a box on the honor system, or link a
 [RetroAchievements](https://retroachievements.org) account on their account page
 so that "Game Beaten" awards for the month's game show up by themselves (only
 awards earned after the game was picked count). Late finishes of older picks
-count too. There is also an all-time board. The RetroAchievements sets for a
+count too. Linked members who are partway through the current game show up
+under it with their progress toward beating it (the set's progression and win
+condition achievements earned since the pick) and their latest achievement.
+There is also an all-time board. The RetroAchievements sets for a
 vote winner come from Wikidata, and hosts can change them on their account page.
 
 ## Develop
@@ -81,4 +84,5 @@ in and recognizing the same person across sign-in options, never shown).
 Session and sign-in link tokens are stored only as hashes. Who voted is public;
 how anyone ranked the games is not. Who finished each game is public. Members who
 link RetroAchievements have their RA username stored and linked from the
-leaderboard, and the site reads only their public awards.
+leaderboard, and the site reads only their public awards and their public
+progress on the current game.

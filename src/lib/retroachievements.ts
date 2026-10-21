@@ -53,11 +53,63 @@ export function parseAwards(body: unknown): RaAward[] {
   });
 }
 
-async function call(endpoint: string, user: string): Promise<unknown> {
+/** A member's progress on one set, counting only achievements earned since a given time. */
+export type RaProgress = {
+  /**
+   * Steps toward "Game Beaten": the progression achievements, plus one for a win condition. If
+   * the set has neither type, every achievement is a step.
+   */
+  stepsDone: number;
+  stepsTotal: number;
+  /** Whether the set has progression or win condition achievements. */
+  beatable: boolean;
+  earned: number;
+  total: number;
+  last: { title: string; badge: string; at: Date } | null;
+};
+
+/** RA gives most times in UTC without saying so, like "2026-10-03 17:51:02". */
+function raDate(value: unknown): Date | null {
+  if (typeof value !== "string") return null;
+  const d = new Date(/(?:z|[+-]\d\d:?\d\d)$/i.test(value) ? value : `${value.replace(" ", "T")}Z`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Progress from an API_GetGameInfoAndUserProgress response. Unearned achievements have no dates. */
+export function parseProgress(body: unknown, since: Date): RaProgress | null {
+  const list = (body as { Achievements?: unknown } | null)?.Achievements;
+  if (!list || typeof list !== "object") return null;
+  type Raw = { Title?: string; BadgeName?: string; Type?: string | null; type?: string | null; DateEarned?: string; DateEarnedHardcore?: string };
+  const all = Object.values(list as Record<string, Raw>).map((a) => {
+    // The live API says Type and the docs say type. Replaying in hardcore after the pick counts.
+    const dates = [raDate(a.DateEarned), raDate(a.DateEarnedHardcore)].filter((d): d is Date => d !== null && d >= since);
+    const at = dates.length ? new Date(Math.min(...dates.map((d) => d.getTime()))) : null;
+    return { title: a.Title ?? "", badge: a.BadgeName ?? "", type: a.Type ?? a.type ?? null, at };
+  });
+  const earned = all.filter((a) => a.at !== null);
+  const progression = all.filter((a) => a.type === "progression");
+  const wins = all.filter((a) => a.type === "win_condition");
+  const beatable = progression.length + wins.length > 0;
+  const last = earned.reduce<(typeof earned)[number] | null>((l, a) => (!l || a.at! > l.at! ? a : l), null);
+  return {
+    stepsDone: beatable ? progression.filter((a) => a.at).length + (wins.some((a) => a.at) ? 1 : 0) : earned.length,
+    stepsTotal: beatable ? progression.length + (wins.length ? 1 : 0) : all.length,
+    beatable,
+    earned: earned.length,
+    total: all.length,
+    last: last ? { title: last.title, badge: last.badge, at: last.at! } : null,
+  };
+}
+
+export function raBadgeUrl(badge: string) {
+  return `https://media.retroachievements.org/Badge/${encodeURIComponent(badge)}.png`;
+}
+
+async function call(endpoint: string, params: Record<string, string>): Promise<unknown> {
   const key = process.env.RA_API_KEY;
   if (!key) throw new RaError("RetroAchievements isn't set up on this site.");
   // The key is in the URL, so never log it.
-  const url = `${API}/${endpoint}.php?${new URLSearchParams({ u: user, y: key })}`;
+  const url = `${API}/${endpoint}.php?${new URLSearchParams({ ...params, y: key })}`;
   const res = await fetch(url, { headers: HEADERS, cache: "no-store", signal: AbortSignal.timeout(8000) }).catch(() => null);
   if (!res) throw new RaError("RetroAchievements didn't answer. Try again in a bit.");
   if (res.status === 404) return null;
@@ -68,11 +120,16 @@ async function call(endpoint: string, user: string): Promise<unknown> {
 
 /** Looks up a username. Returns null if there is no such user. */
 export async function resolveUser(name: string): Promise<RaUser | null> {
-  const body = (await call("API_GetUserProfile", name)) as { ULID?: string; User?: string } | null;
+  const body = (await call("API_GetUserProfile", { u: name })) as { ULID?: string; User?: string } | null;
   return body?.ULID && body.User ? { ulid: body.ULID, username: body.User } : null;
 }
 
 /** Every visible beaten and mastery award, in one call however many games there are. */
 export async function userAwards(ulid: string): Promise<RaAward[]> {
-  return parseAwards(await call("API_GetUserAwards", ulid));
+  return parseAwards(await call("API_GetUserAwards", { u: ulid }));
+}
+
+/** A member's progress on one set since the given time. Returns null if RA doesn't know the game. */
+export async function gameProgress(ulid: string, gameId: number, since: Date): Promise<RaProgress | null> {
+  return parseProgress(await call("API_GetGameInfoAndUserProgress", { g: String(gameId), u: ulid }), since);
 }
