@@ -83,10 +83,10 @@ describe("introMessage", () => {
     expect(msg).toContain("Welcome <@user1>");
     expect(msg).toContain("**Favorite retro game:** \\@everyone \\*\\*Contra\\*\\*");
     expect(msg).toContain("\\[a link\\]\\(https://x.test\\)");
-    expect(msg).toContain("> line one\n> line two");
+    expect(msg).toContain("**Welcome message:** line one line two");
   });
 
   it("leaves out the optional answer when blank", () => {
-    expect(introMessage("user1", { game: "Contra", found: "Friend", more: "" })).not.toContain("\n> ");
+    expect(introMessage("user1", { game: "Contra", found: "Friend", more: "" })).not.toContain("Welcome message");
   });
 });

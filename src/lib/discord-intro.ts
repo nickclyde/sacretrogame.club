@@ -116,7 +116,7 @@ export function introMessage(userId: string, answers: Answers) {
     `**Favorite retro game:** ${plain(answers.game)}`,
     `**Found us through:** ${plain(answers.found)}`,
   ];
-  if (answers.more) lines.push(...answers.more.split(/\n+/).map((l) => `> ${plain(l)}`));
+  if (answers.more) lines.push(`**Welcome message:** ${plain(answers.more.replace(/\s+/g, " "))}`);
   return lines.join("\n");
 }
 
