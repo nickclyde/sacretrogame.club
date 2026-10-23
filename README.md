@@ -55,6 +55,8 @@ to the server log instead of emailed.
 | `DISCORD_GOTM_WEBHOOK_URL` | Optional. Channel webhook for new nominations, voting opening, and the winner |
 | `ADMIN_DISCORD_IDS`, `ADMIN_EMAILS` | Comma separated. Hosts who can open or close the game vote early and remove nominations |
 | `RA_API_KEY` | Optional. RetroAchievements web API key (from any RA account's settings). Without it, linking RetroAchievements is hidden and only the honor system box works |
+| `DISCORD_BOT_TOKEN`, `DISCORD_PUBLIC_KEY` | Optional. The Discord app behind the intro gate: its bot token (needs Manage Roles and Send Messages) and its public key, used to verify requests to `/api/discord/interactions` |
+| `DISCORD_MEMBER_ROLE_ID`, `DISCORD_INTRO_CHANNEL_ID` | The role a new member gets after introducing themselves, and the channel their intro is posted in |
 
 Poll options live in `src/data/polls.ts` and branches in `src/data/libraries.ts`.
 The meeting schedule shown on the homepage lives in `src/data/meeting.ts`, and the
