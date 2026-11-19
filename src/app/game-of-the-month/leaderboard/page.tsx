@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FinishedToggle } from "@/components/FinishedToggle";
+import { isBoxArt } from "@/data/games";
 import { getUser } from "@/lib/auth/session";
 import {
   allTime,
@@ -113,8 +114,12 @@ function MonthBoard({
           <Image
             {...pick.image}
             alt=""
-            unoptimized={pick.image.src.startsWith("https:")} // A vote winner's box art, see Cover.
-            className={`h-auto shrink-0 ${pick.image.height > pick.image.width ? "w-16 border-2 border-ink" : "logo-plate w-28"}`}
+            unoptimized={isBoxArt(pick.image)} // Wikimedia throttles the optimizer, see Cover.
+            className={`h-auto shrink-0 ${
+              !isBoxArt(pick.image)
+                ? "logo-plate w-28"
+                : `border-2 border-ink ${pick.image.height > pick.image.width ? "w-16" : "w-24"}`
+            }`}
           />
         )}
         <div className="min-w-0">
