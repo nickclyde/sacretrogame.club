@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { VenueMap } from "@/components/VenueMap";
 import { DISCORD_INVITE_URL } from "@/data/club";
+import { isBoxArt } from "@/data/games";
 import { directionsUrl, fullAddress } from "@/data/libraries";
 import { MEETINGS, MEETING_LIBRARY } from "@/data/meeting";
 import { countFinishers, syncRaLater } from "@/lib/finishers";
@@ -84,8 +85,12 @@ export default async function Home() {
               <Image
                 {...game.image}
                 alt=""
-                unoptimized={game.image.src.startsWith("https:")} // A vote winner's box art, see Cover.
-                className={`mb-4 h-auto w-full ${game.image.height > game.image.width ? "max-w-[200px] border-[3px] border-ink" : "logo-plate max-w-[320px]"}`}
+                unoptimized={isBoxArt(game.image)} // Wikimedia throttles the optimizer, see Cover.
+                className={`mb-4 h-auto w-full ${
+                  !isBoxArt(game.image)
+                    ? "logo-plate max-w-[320px]"
+                    : `border-[3px] border-ink ${game.image.height > game.image.width ? "max-w-[200px]" : "max-w-[280px]"}`
+                }`}
               />
             )}
             <p className="font-pixel text-3xl leading-tight">{game.title}</p>

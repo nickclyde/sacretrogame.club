@@ -6,6 +6,7 @@ import { NominateForm } from "@/components/NominateForm";
 import { RemoveNomination } from "@/components/RemoveNomination";
 import { RoundsChart } from "@/components/RoundsChart";
 import { MEETING_LIBRARY } from "@/data/meeting";
+import { isBoxArt } from "@/data/games";
 import { NOMINATIONS_PER_PERSON } from "@/data/gotm";
 import { getUser } from "@/lib/auth/session";
 import { pickForMonth } from "@/lib/game-picks";
@@ -62,8 +63,12 @@ export default async function GameOfTheMonth() {
             <Image
               {...nowPlaying.image}
               alt=""
-              unoptimized={nowPlaying.image.src.startsWith("https:")} // A vote winner's box art, see Cover.
-              className={`h-auto shrink-0 ${nowPlaying.image.height > nowPlaying.image.width ? "w-20 border-2 border-ink" : "logo-plate w-40"}`}
+              unoptimized={isBoxArt(nowPlaying.image)} // Wikimedia throttles the optimizer, see Cover.
+              className={`h-auto shrink-0 ${
+                !isBoxArt(nowPlaying.image)
+                  ? "logo-plate w-40"
+                  : `border-2 border-ink ${nowPlaying.image.height > nowPlaying.image.width ? "w-20" : "w-28"}`
+              }`}
             />
           )}
           <div className="min-w-0">

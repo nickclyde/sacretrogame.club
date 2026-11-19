@@ -15,6 +15,15 @@ export type GamePick = {
   mod?: { label: string; url: string };
 };
 
+/**
+ * Whether a pick's image is box art from Wikipedia rather than a logotype under public/. Box art
+ * gets a frame, logotypes get a light plate in dark mode. Going by the shape doesn't work: US SNES
+ * boxes are wider than tall, like most logotypes.
+ */
+export function isBoxArt(image: NonNullable<GamePick["image"]>): boolean {
+  return image.src.startsWith("https:");
+}
+
 // Game of the month picks, keyed by the year and month of the meetup where the game gets
 // discussed. The homepage shows the pick for the upcoming meetup, if there is one. Winners of
 // the club vote show up on their own (see src/lib/game-picks.ts); an entry here takes over
